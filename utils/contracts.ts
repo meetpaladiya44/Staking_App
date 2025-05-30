@@ -4,9 +4,9 @@ import { getContract } from "thirdweb";
 import { STAKING_CONTRACT_ABI } from "./stakingContractABI";
 
 // Replace <contract_address> with the contract address of your contract
-const stakeTokenContractAddress = "0x784EAb17fA8072b9510CCF5C9dD5aB81f5096b62";
-const rewardTokenContractAddress = "0x6f81Ad9Bf0664c5216EFa7df6A50974b0BBbcAC8";
-const stakingContractAddress = "0x8890764Fa1B193E65e0fe30a940611EB4035B881";
+const stakeTokenContractAddress = process.env.NEXT_PUBLIC_STAKE_TOKEN_CONTRACT_ADDRESS!;
+const rewardTokenContractAddress = process.env.NEXT_PUBLIC_REWARD_TOKEN_CONTRACT_ADDRESS!;
+const stakingContractAddress = process.env.NEXT_PUBLIC_STAKING_CONTRACT_ADDRESS!;
 
 export const STAKE_TOKEN_CONTRACT = getContract({
     client: client,
