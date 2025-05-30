@@ -3,6 +3,7 @@ import { Page } from '@/components/PageLayout';
 import { UserInfo } from '@/components/UserInfo';
 import { Marble, TopBar } from '@worldcoin/mini-apps-ui-kit-react';
 import MainPage from '@/components/MainPage';
+import { Influencers } from '@/components/Influencers';
 
 export default async function Home() {
   const session = await auth();
@@ -26,6 +27,7 @@ export default async function Home() {
         <UserInfo />
         {/* <WLDStaking /> */}
         <MainPage />
+        <Influencers />
       </Page.Main>
     </>
   );
