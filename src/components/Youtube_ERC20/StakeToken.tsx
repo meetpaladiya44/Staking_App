@@ -7,6 +7,7 @@ import { prepareContractCall, toEther, toWei } from "thirdweb";
 import { useEffect, useState } from "react";
 import { client } from "@/app/client";
 import { chain } from "@/app/chain";
+import styles from '../../app/page.module.css';
 
 type StakingStateType = "init" | "approved";
 
@@ -18,6 +19,8 @@ export const StakeToken = () => {
     const [stakingState, setStakingState] = useState<StakingStateType>("init");
     const [isStaking, setIsStaking] = useState(false);
     const [isWithdrawing, setIsWithdrawing] = useState(false);
+    const [stakeError, setStakeError] = useState<string | null>(null);
+    const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
     const { data: stakingTokenBalance, isLoading: loadingStakeTokenBalance, refetch: refetchStakingTokenBalance } = useReadContract(
         balanceOf,
@@ -69,79 +72,62 @@ export const StakeToken = () => {
         refetchStakeInfo();
     };
 
+    const validateStake = (amount: number | "") => {
+        if (amount === "" || Number(amount) <= 0) return 'Amount must be greater than 0.';
+        if (!stakingTokenBalance || Number(toEther(stakingTokenBalance)) < Number(amount)) return 'Insufficient staking token balance.';
+        return null;
+    };
+    const validateWithdraw = (amount: number | "") => {
+        if (amount === "" || Number(amount) <= 0) return 'Amount must be greater than 0.';
+        if (!stakeInfo || Number(toEther(stakeInfo[0])) < Number(amount)) return 'Cannot withdraw more than staked.';
+        return null;
+    };
+
     return (
         <div>
             {account && (
-                <div style={{
-                    backgroundColor: "#151515",
-                    padding: "40px",
-                    borderRadius: "10px",
-                }}>
+                <div className={styles.stakingCard}>
                     <ConnectButton 
                         client={client}
                         chain={chain}
                     />
-                    <div style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "flex-start",
-                        margin: "20px",
-                    }}>
-                        {loadingStakeTokenBalance ? (
-                            <p>Loading...</p>
-                        ) : (
-                            <p style={{
-                                padding: "10px",
-                                borderRadius: "5px",
-                                marginRight: "5px",
-                            }}>Staking Token: {truncate(toEther(stakingTokenBalance!),2)}</p>
-                        )}
-                        {loadingRewardTokenBalance ? (
-                            <p>Loading...</p>
-                        ) : (
-                            <p style={{
-                                padding: "10px",
-                                borderRadius: "5px",
-                            }}>Reward Token: {truncate(toEther(rewardTokenBalance!),2)}</p>
-                        )}
+                    <div className={styles.stakingBalances}>
+                        <div className={styles.stakingBalanceRow}>
+                            <span className={styles.stakingText}>
+                                {loadingStakeTokenBalance
+                                    ? "Loading..."
+                                    : typeof stakingTokenBalance !== "undefined"
+                                        ? `Staking Token: ${truncate(toEther(stakingTokenBalance), 2)}`
+                                        : "Staking Token: 0"}
+                            </span>
+                        </div>
+                        <div className={styles.stakingBalanceRow}>
+                            <span className={styles.stakingText}>
+                                {loadingRewardTokenBalance
+                                    ? "Loading..."
+                                    : typeof rewardTokenBalance !== "undefined"
+                                        ? `Reward Token: ${truncate(toEther(rewardTokenBalance), 2)}`
+                                        : "Reward Token: 0"}
+                            </span>
+                        </div>
                     </div>
-                    
                     {stakeInfo && (
                         <>
-                            <div>
+                            <div className={styles.stakingButtons}>
                                 <button
-                                    style={{
-                                        margin: "5px",
-                                        padding: "10px",
-                                        backgroundColor: "#efefef",
-                                        border: "none",
-                                        borderRadius: "6px",
-                                        color: "#333",
-                                        fontSize: "1rem",
-                                        width: "45%",
-                                        cursor: "pointer",
-                                    }}
+                                    className={styles.stakingButton}
                                     onClick={() => setIsStaking(true)}
                                 >Stake</button>
                                 <button
-                                    style={{
-                                        margin: "5px",
-                                        padding: "10px",
-                                        backgroundColor: "#efefef",
-                                        border: "none",
-                                        borderRadius: "6px",
-                                        color: "#333",
-                                        fontSize: "1rem",
-                                        width: "45%",
-                                        cursor: "pointer",
-                                    }}
+                                    className={styles.stakingButton}
                                     onClick={() => setIsWithdrawing(true)}
-                                >Withraw</button>
+                                >Withdraw</button>
                             </div>
-                            <div>
-                                <p>Balance Staked: {truncate(toEther(stakeInfo[0]).toString(),2)}</p>
-                                <p>Reward Balance: {truncate(toEther(stakeInfo[1]).toString(),2)}</p>
+                            <div style={{ width: '100%' }}>
+                                <p className={styles.stakingText}>Balance Staked: {truncate(toEther(stakeInfo[0]).toString(),2)}</p>
+                                <p className={styles.stakingText}>Reward Balance: {truncate(toEther(stakeInfo[1]).toString(),2)}</p>
                                 <TransactionButton
+                                    className={styles.claimButton}
                                     transaction={() => (
                                         prepareContractCall({
                                             contract: STAKING_CONTRACT,
@@ -158,79 +144,58 @@ export const StakeToken = () => {
                         </>
                     )}
                     {isStaking && (
-                        <div style={{
-                            position: "fixed",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: "100%",
-                            backgroundColor: "rgba(0, 0, 0, 0.5)",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                        }}>
-                            <div style={{
-                                position: "relative",
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                backgroundColor: "#151515",
-                                padding: "40px",
-                                borderRadius: "10px",
-                                minWidth: "300px",
-                            }}>
+                        <div className={styles.stakingModalOverlay}>
+                            <div className={styles.stakingModal}>
                                 <button
-                                    style={{
-                                        position: "absolute",
-                                        top: 5,
-                                        right: 5,
-                                        padding: "5px",
-                                        margin: "5px",
-                                        fontSize: "0.5rem",
-                                    }}
+                                    className={styles.closeModalBtn}
                                     onClick={() => {
                                         setIsStaking(false)
                                         setStakeAmount(0);
                                         setStakingState("init");
+                                        setStakeError(null);
                                     }}
-                                >Close</button>
-                                <h3>Stake</h3>
-                                <p>Balance: {toEther(stakingTokenBalance!)}</p>
+                                >✕</button>
+                                <h3 className={styles.stakingText}>Stake</h3>
+                                <p className={styles.stakingText}>Balance: {toEther(stakingTokenBalance!)}</p>
                                 {stakingState === "init" ? (
                                     <>
                                         <input 
                                             type="number" 
                                             placeholder="0.0"
                                             value={stakeAmount}
-                                            onChange={(e) => setStakeAmount(parseFloat(e.target.value))}
-                                            style={{
-                                                margin: "10px",
-                                                padding: "5px",
-                                                borderRadius: "5px",
-                                                border: "1px solid #333",
-                                                width: "100%",
+                                            onChange={(e) => {
+                                                const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                                setStakeAmount(val);
+                                                setStakeError(validateStake(val));
                                             }}
+                                            className={styles.stakingInput}
                                         />
-                                        <TransactionButton
-                                            transaction={() => (
-                                                approve({
-                                                    contract: STAKE_TOKEN_CONTRACT,
-                                                    spender: STAKING_CONTRACT.address,
-                                                    amount: stakeAmount,
-                                                })
-                                            )}
-                                            onTransactionConfirmed={() => setStakingState("approved")}
-                                            style={{
-                                                width: "100%",
-                                                margin: "10px 0",
-                                            }}
-                                        >Set Approval</TransactionButton>
+                                        {stakeError && (
+                                            <div className={styles.errorBox}>{stakeError}</div>
+                                        )}
+                                        {stakeError ? (
+                                            <button className={`${styles.stakingButton} ${styles.stakingButtonDisabled}`} disabled>
+                                                Set Approval
+                                            </button>
+                                        ) : (
+                                            <TransactionButton
+                                                className={styles.stakingButton}
+                                                transaction={() => (
+                                                    approve({
+                                                        contract: STAKE_TOKEN_CONTRACT,
+                                                        spender: STAKING_CONTRACT.address as `0x${string}`,
+                                                        amount: stakeAmount,
+                                                    })
+                                                )}
+                                                onTransactionConfirmed={() => setStakingState("approved")}
+                                            >Set Approval</TransactionButton>
+                                        )}
                                     </>
-                                   
                                 ) : (
                                     <>
-                                        <h3 style={{ margin: "10px 0"}}>{stakeAmount}</h3>
+                                        <h3 className={styles.stakingText} style={{ margin: "10px 0" }}>{stakeAmount}</h3>
                                         <TransactionButton
+                                            className={styles.stakingButton}
                                             transaction={() => (
                                                 prepareContractCall({
                                                     contract: STAKING_CONTRACT,
@@ -244,6 +209,7 @@ export const StakeToken = () => {
                                                 refetchData();
                                                 refetchStakingTokenBalance();
                                                 setIsStaking(false);
+                                                setStakeError(null);
                                             }}
                                         >Stake</TransactionButton>
                                     </>
@@ -252,72 +218,53 @@ export const StakeToken = () => {
                         </div>
                     )}
                     {isWithdrawing && (
-                        <div style={{
-                            position: "fixed",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            height: "100%",
-                            backgroundColor: "rgba(0, 0, 0, 0.5)",
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                        }}>
-                            <div style={{
-                                position: "relative",
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                backgroundColor: "#151515",
-                                padding: "40px",
-                                borderRadius: "10px",
-                                minWidth: "300px",
-                            }}>
+                        <div className={styles.stakingModalOverlay}>
+                            <div className={styles.stakingModal}>
                                 <button
-                                    style={{
-                                        position: "absolute",
-                                        top: 5,
-                                        right: 5,
-                                        padding: "5px",
-                                        margin: "5px",
-                                        fontSize: "0.5rem",
-                                    }}
+                                    className={styles.closeModalBtn}
                                     onClick={() => {
                                         setIsWithdrawing(false)
+                                        setWithdrawError(null);
                                     }}
-                                >Close</button>
-                                <h3>Withraw</h3>
+                                >✕</button>
+                                <h3 className={styles.stakingText}>Withdraw</h3>
                                 <input 
                                     type="number" 
                                     placeholder="0.0"
                                     value={withdrawAmount}
-                                    onChange={(e) => setWithdrawAmount(parseFloat(e.target.value))}
-                                    style={{
-                                        margin: "10px",
-                                        padding: "5px",
-                                        borderRadius: "5px",
-                                        border: "1px solid #333",
-                                        width: "100%",
+                                    onChange={(e) => {
+                                        const val = e.target.value === "" ? 0 : parseFloat(e.target.value);
+                                        setWithdrawAmount(val);
+                                        setWithdrawError(validateWithdraw(val));
                                     }}
+                                    className={styles.stakingInput}
                                 />
-                                <TransactionButton
-                                    transaction={() => (
-                                        prepareContractCall({
-                                            contract: STAKING_CONTRACT,
-                                            method: "withdraw",
-                                            params: [toWei(withdrawAmount.toString())],
-                                        })
-                                    )}
-                                    onTransactionConfirmed={() => {
-                                        setWithdrawAmount(0);
-                                        refetchData();
-                                        refetchStakingTokenBalance();
-                                        setIsWithdrawing(false);
-                                    }}style={{
-                                        width: "100%",
-                                        margin: "10px 0",
-                                    }}
-                                >Withdraw</TransactionButton>
+                                {withdrawError && (
+                                    <div className={styles.errorBox}>{withdrawError}</div>
+                                )}
+                                {withdrawError ? (
+                                    <button className={`${styles.stakingButton} ${styles.stakingButtonDisabled}`} disabled>
+                                        Withdraw
+                                    </button>
+                                ) : (
+                                    <TransactionButton
+                                        className={styles.stakingButton}
+                                        transaction={() => (
+                                            prepareContractCall({
+                                                contract: STAKING_CONTRACT,
+                                                method: "withdraw",
+                                                params: [toWei(withdrawAmount.toString())],
+                                            })
+                                        )}
+                                        onTransactionConfirmed={() => {
+                                            setWithdrawAmount(0);
+                                            refetchData();
+                                            refetchStakingTokenBalance();
+                                            setIsWithdrawing(false);
+                                            setWithdrawError(null);
+                                        }}
+                                    >Withdraw</TransactionButton>
+                                )}
                             </div>
                         </div>
                     )}
