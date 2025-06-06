@@ -21,13 +21,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!username) {
-      return NextResponse.json(
-        { error: "Username is required" },
-        { status: 400 }
-      );
-    }
-
     if (!walletAddress) {
       return NextResponse.json(
         { error: "Wallet address is required" },

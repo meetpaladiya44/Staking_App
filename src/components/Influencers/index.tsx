@@ -14,25 +14,22 @@ export const Influencers = () => {
   const [subscribingTo, setSubscribingTo] = useState<number | null>(null)
   const [subscriptionMessages, setSubscriptionMessages] = useState<{ [key: number]: string }>({})
   const [showUsernameAlert, setShowUsernameAlert] = useState(false)
+  const userAddress = session?.user?.id;
+  const username = session?.user?.username;
 
   useEffect(() => {
     const fetchInfluencers = async () => {
       try {
-        const username = MiniKit.user.username;
         const response = await fetch('/api/top-influencers')
         const data = await response.json()
         console.log('Top Influencers: ', data)
         console.log('username: ', username);
 
-        const userAddress = session?.user?.username
-          ? (await MiniKit.getUserByUsername(`${session.user.username}`))?.walletAddress
-          : null
-
         const influencersWithSubscriptionStatus = (data.influencers || []).map(
           (influencer: InfluencerWithSubscription) => {
             // Check if user is subscribed by either username or wallet address
             const isSubscribed = influencer.subscribers?.some(subscriber =>
-              (session?.user?.username && subscriber.username === session.user.username) ||
+              (username && subscriber.username === username) ||
               (userAddress && subscriber.address === userAddress)
             ) || false
 
@@ -71,15 +68,6 @@ export const Influencers = () => {
       return
     }
 
-    const address = (await MiniKit.getUserByUsername(`${session.user?.username}`)).walletAddress;
-    // const username = session.user?.username;
-    const username = null;
-
-    if (username === null || username === undefined) {
-      setShowUsernameAlert(true)
-      return
-    }
-
     setSubscribingTo(influencerId)
     setSubscriptionMessages(prev => {
       const { [influencerId]: _, ...rest } = prev
@@ -95,7 +83,7 @@ export const Influencers = () => {
         body: JSON.stringify({
           influencerId,
           username: username,
-          walletAddress: address,
+          walletAddress: userAddress,
         }),
       })
 
@@ -118,8 +106,8 @@ export const Influencers = () => {
                 subscribers: [
                   ...(influencer.subscribers || []),
                   {
-                    username: session.user?.username || '',
-                    address: address || '',
+                    username: username || '',
+                    address: userAddress || '',
                     subscribedAt: new Date()
                   }
                 ],
@@ -235,9 +223,12 @@ export const Influencers = () => {
                   'Subscribe'
                 )}
               </Button>
-              {subscriptionMessages[influencer.id] && subscriptionMessages[influencer.id].includes('Successfully') && (
+              {subscriptionMessages[influencer.id] && (
                 <div
-                  className={`mt-2 p-3 rounded-full text-xs font-medium transition-all duration-300 w-full text-center bg-green-500/20 text-green-400 border border-green-500/30`}
+                  className={`mt-2 p-3 rounded-lg text-sm font-medium font-['Inter'] transition-all duration-300 w-full text-center ${subscriptionMessages[influencer.id].includes('Successfully')
+                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    }`}
                 >
                   {subscriptionMessages[influencer.id]}
                 </div>
@@ -251,40 +242,6 @@ export const Influencers = () => {
           )}
         </div>
       </div>
-
-      {/* Username Required Alert Dialog */}
-      <AlertDialog open={showUsernameAlert} onOpenChange={setShowUsernameAlert}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              <span className="!text-neutral-800">
-                Username Required
-              </span>
-            </AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogDescription>
-            Username is required to subscribe to influencers. Please set your username in the World app settings.
-            <br /><br />
-            <strong>Steps:</strong>
-            <br />
-            1. Open World app
-            <br />
-            2. Go to Settings
-            <br />
-            3. Navigate to World ID
-            <br />
-            4. Set your username
-          </AlertDialogDescription>
-          <AlertDialogFooter>
-            <Button
-              onClick={() => setShowUsernameAlert(false)}
-              className="!bg-blue-600 hover:!bg-blue-700 text-white"
-            >
-              Got it
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   )
 }
