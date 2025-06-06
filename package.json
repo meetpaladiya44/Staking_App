@@ -13,8 +13,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@thirdweb-dev/react": "^4.9.4",
-    "@thirdweb-dev/sdk": "^4.0.99",
     "@worldcoin/mini-apps-ui-kit-react": "^1.0.2",
     "@worldcoin/minikit-js": "^1.9.4",
     "@worldcoin/minikit-react": "^1.9.5",
@@ -27,7 +25,6 @@
     "react-dom": "^19.0.0",
     "react-icons": "^5.5.0",
     "tailwind-merge": "^3.2.0",
-    "thirdweb": "^5.101.1",
     "viem": "2.23.5"
   },
   "devDependencies": {

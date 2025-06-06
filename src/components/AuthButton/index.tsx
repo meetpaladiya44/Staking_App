@@ -47,14 +47,14 @@ export const AuthButton = () => {
   }, [isInstalled, isPending]);
 
   return (
-    // <LiveFeedback
-    //   label={{
-    //     failed: 'Failed to login',
-    //     // pending: 'Logging in',
-    //     success: 'Logged in',
-    //   }}
-    //   state={isPending ? 'pending' : undefined}
-    // >
+    <LiveFeedback
+      label={{
+        failed: 'Failed to login',
+        pending: 'Logging in',
+        success: 'Logged in',
+      }}
+      state={isPending ? 'pending' : undefined}
+    >
       <Button
         onClick={onClick}
         disabled={isPending}
@@ -63,6 +63,6 @@ export const AuthButton = () => {
       >
         Login with Wallet
       </Button>
-    // </LiveFeedback>
+    </LiveFeedback>
   );
 };

@@ -42,7 +42,7 @@ export async function GET() {
     return NextResponse.json(
       {
         influencers: influencers,
-        count: influencers.length, // Optional: include count
+        count: influencers.length,
       },
       { status: 200 }
     );

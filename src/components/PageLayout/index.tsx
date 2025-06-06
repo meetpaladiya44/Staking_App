@@ -31,7 +31,7 @@ const Main = (props: { children: ReactNode; className?: string }) => {
   return (
     <main
       className={twMerge(
-        clsx('grow overflow-y-auto p-6 pt-3', props.className),
+        clsx('grow overflow-y-auto bg-neutral-900 p-3', props.className),
       )}
     >
       {props.children}
@@ -41,7 +41,7 @@ const Main = (props: { children: ReactNode; className?: string }) => {
 
 const Footer = (props: { children: ReactNode; className?: string }) => {
   return (
-    <footer className={twMerge('px-6 pb-[35px]', clsx(props.className))}>
+    <footer className={twMerge('px-6 pt-2 pb-6', clsx(props.className))}>
       {props.children}
     </footer>
   );

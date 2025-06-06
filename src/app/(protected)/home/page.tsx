@@ -10,23 +10,16 @@ export default async function Home() {
 
   return (
     <>
-      <Page.Header className="p-0">
+      {/* <Page.Header className="p-0 !bg-neutral-900">
         <TopBar
-          title="Home"
-          endAdornment={
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold capitalize">
-                {session?.user.username}
-              </p>
-              <Marble src={session?.user.profilePictureUrl} className="w-12" />
-            </div>
-          }
+          title="World Trade"
+          className="!text-white"
         />
-      </Page.Header>
+      </Page.Header> */}
       <Page.Main className="flex flex-col items-center justify-start gap-4 mb-16">
-        <UserInfo />
+        {/* <UserInfo /> */}
         {/* <WLDStaking /> */}
-        <MainPage />
+        {/* <MainPage /> */}
         <Influencers />
       </Page.Main>
     </>

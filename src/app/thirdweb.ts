@@ -1,3 +1,3 @@
-'use client';
+// 'use client';
 
-export { ThirdwebProvider, ConnectEmbed } from 'thirdweb/react';
+// export { ThirdwebProvider, ConnectEmbed } from 'thirdweb/react';
