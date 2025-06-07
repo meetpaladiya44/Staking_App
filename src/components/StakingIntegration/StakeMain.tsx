@@ -440,259 +440,380 @@ export function StakingFormMain() {
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 shadow-lg">
-      {/* Add tab navigation */}
-      <div className="flex mb-6">
-        <button
-          onClick={() => setActiveTab('stake')}
-          className={`px-4 py-2 rounded-l-lg font-medium transition-colors ${
-            activeTab === 'stake'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
-        >
-          Stake Tokens
-        </button>
-        <button
-          onClick={() => setActiveTab('withdraw')}
-          className={`px-4 py-2 rounded-r-lg font-medium transition-colors ${
-            activeTab === 'withdraw'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
-        >
-          Withdraw Stakes
-        </button>
-      </div>
-
-      {walletAddress && (
-        <div className="mb-4 p-2 bg-gray-700 rounded text-sm">
-          <p className="text-gray-300">
-            Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+            🌍 World Staking Platform
+          </h1>
+          <p className="text-gray-600 text-lg">Stake your tokens and earn rewards with automated trading</p>
         </div>
-      )}
 
-      {/* Transaction Status */}
-      {showTransactionStatus && (
-        <div className="mb-4 p-3 bg-blue-900/50 border border-blue-700 rounded">
-          <div className="flex items-center space-x-2">
-            {isConfirming && (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-                <span className="text-blue-400 text-sm">Transaction confirming...</span>
-              </>
-            )}
-            {isConfirmed && (
-              <>
-                <div className="h-4 w-4 bg-green-500 rounded-full"></div>
-                <span className="text-green-400 text-sm">Transaction confirmed!</span>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Stake Tab Content */}
-      {activeTab === 'stake' && (
-        <>
-          <h2 className="text-xl font-bold mb-4">Stake Tokens</h2>
-          
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">Amount to Stake</label>
-            <div className="relative">
-              <input
-                type="text"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.0"
-                disabled={isConfirming}
-                className="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 disabled:opacity-50"
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                <button 
-                  onClick={handleMaxAmount}
-                  className="text-blue-400 text-xs hover:text-blue-300 disabled:opacity-50"
-                  disabled={balance === BigInt(0) || isConfirming}
-                >
-                  MAX
-                </button>
-              </div>
-            </div>
-            <p className="mt-1 text-sm text-gray-400">Balance: {formattedBalance} WST</p>
-            <p className="mt-1 text-xs text-gray-500">
-              Permit2 Allowance: {formatBigInt(permit2Allowance)} WST
-              {permit2Allowance === BigInt(0) && (
-                <span className="text-amber-400 ml-2">
-                  ⚠️ Needs one-time approval for Permit2
+        {/* Main Card */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          {/* Tab Navigation */}
+          <div className="border-b border-gray-200 bg-gray-50">
+            <div className="flex">
+              <button
+                onClick={() => setActiveTab('stake')}
+                className={`flex-1 px-6 py-4 text-center font-semibold transition-all duration-200 ${
+                  activeTab === 'stake'
+                    ? 'bg-blue-600 text-white border-b-2 border-blue-600'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  💰 Stake Tokens
                 </span>
-              )}
-            </p>
-            
-            {isValidAmount && !hasEnoughBalance && (
-              <p className="mt-1 text-sm text-red-400">Insufficient balance</p>
-            )}
-          </div>
-          
-          {error && (
-            <div className="mb-4 p-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200">
-              {error}
+              </button>
+              <button
+                onClick={() => setActiveTab('withdraw')}
+                className={`flex-1 px-6 py-4 text-center font-semibold transition-all duration-200 ${
+                  activeTab === 'withdraw'
+                    ? 'bg-blue-600 text-white border-b-2 border-blue-600'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  🏦 Withdraw Stakes
+                </span>
+              </button>
             </div>
-          )}
-          
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={handleStakeWithPermit2}
-              disabled={!isValidAmount || !hasEnoughBalance || isStaking || !walletAddress || isConfirming}
-              className={`w-full p-2 rounded font-medium transition-colors ${
-                isStaking || !isValidAmount || !hasEnoughBalance || isConfirming
-                  ? 'bg-blue-800 cursor-not-allowed opacity-50'
-                  : 'bg-blue-600 hover:bg-blue-700'
-              }`}
-            >
-              {isStaking ? 'Staking...' : 'Stake with Permit2'}
-            </button>
           </div>
-          
-          <div className="mt-4 text-sm text-gray-400">
-            <p>• World App will show a confirmation popup for each transaction</p>
-            <p>• Uses Permit2 for gasless token transfers (one-time approval needed)</p>
-            <p>• Transactions are processed on World Chain (gas fees covered)</p>
-            <p>• Staking locks your tokens for 10 minutes (for testing)</p>
-            <p>• 2% of staked amount will be used for trading</p>
-            <p>• Rewards can be claimed anytime after lock period</p>
-          </div>
-        </>
-      )}
 
-      {/* Withdraw Tab Content */}
-      {activeTab === 'withdraw' && (
-        <>
-          <h2 className="text-xl font-bold mb-4">Your Stakes</h2>
-          
-          {error && (
-            <div className="mb-4 p-2 bg-red-900/50 border border-red-700 rounded text-sm text-red-200">
-              {error}
-            </div>
-          )}
-          
-          <div className="mb-4">
-            <button
-              onClick={fetchUserStakes}
-              disabled={isLoadingStakes}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors disabled:opacity-50"
-            >
-              {isLoadingStakes ? 'Refreshing...' : 'Refresh Stakes'}
-            </button>
-          </div>
-          
-          {isLoadingStakes ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
-              <span className="ml-2 text-gray-400">Loading stakes...</span>
-            </div>
-          ) : stakes.length === 0 ? (
-            <div className="text-center py-8 text-gray-400">
-              <p>No stakes found</p>
-              <p className="text-sm">Start by staking some tokens!</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {stakes.map((stake, index) => (
-                <div key={index} className="bg-gray-700 rounded-lg p-4 border border-gray-600">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="font-medium">Stake #{stake.index}</h3>
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          stake.active ? 'bg-green-900 text-green-200' : 'bg-gray-600 text-gray-300'
-                        }`}>
-                          {stake.active ? 'Active' : 'Inactive'}
-                        </span>
-                        {stake.tradeActive && (
-                          <span className="px-2 py-1 rounded text-xs bg-yellow-900 text-yellow-200">
-                            Trade Active
-                          </span>
-                        )}
+          <div className="p-6 md:p-8">
+            {/* Wallet Connection Status */}
+            {walletAddress && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <div>
+                    <p className="font-medium text-green-800">Wallet Connected</p>
+                    <p className="text-sm text-green-600 font-mono">
+                      {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Transaction Status */}
+            {showTransactionStatus && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <div className="flex items-center gap-3">
+                  {isConfirming && (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+                      <div>
+                        <p className="font-medium text-blue-800">Transaction Confirming...</p>
+                        <p className="text-sm text-blue-600">Please wait while we process your transaction</p>
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-gray-400">Staked Amount</p>
-                          <p className="font-mono">{formatBigInt(stake.amount)} WST</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-400">Trading Amount</p>
-                          <p className="font-mono">{formatBigInt(stake.tradingAmount)} WST</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-400">Current Trade Value</p>
-                          <p className="font-mono">{formatBigInt(stake.currentTradeValue)} WST</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-400">Claimable Rewards</p>
-                          <p className="font-mono">{formatBigInt(stake.claimableRewards)} RWD</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-400">Staked On</p>
-                          <p className="text-xs">{formatTimestamp(stake.timestamp)}</p>
-                        </div>
-                        <div>
-                          <p className="text-gray-400">Lock Status</p>
-                          <p className="text-xs">{getTimeUntilUnlock(stake.timestamp)}</p>
-                        </div>
+                    </>
+                  )}
+                  {isConfirmed && (
+                    <>
+                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs">✓</span>
                       </div>
+                      <div>
+                        <p className="font-medium text-green-800">Transaction Confirmed!</p>
+                        <p className="text-sm text-green-600">Your transaction was successful</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <span className="text-red-500 text-xl">⚠️</span>
+                  <div className="flex-1">
+                    <p className="font-medium text-red-800">Error</p>
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                  <button
+                    onClick={() => setError(null)}
+                    className="text-red-400 hover:text-red-600 transition-colors"
+                  >
+                    <span className="text-xl">×</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Stake Tab Content */}
+            {activeTab === 'stake' && (
+              <div className="space-y-6">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Stake Your Tokens</h2>
+                  <p className="text-gray-600">Start earning rewards with automated trading</p>
+                </div>
+                
+                {/* Balance Card */}
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
+                  <h3 className="text-lg font-semibold mb-2">Your Balance</h3>
+                  <p className="text-3xl font-bold">{formattedBalance} WST</p>
+                  <div className="mt-3 text-sm opacity-90">
+                    <p>Permit2 Allowance: {formatBigInt(permit2Allowance)} WST</p>
+                    {permit2Allowance === BigInt(0) && (
+                      <p className="text-yellow-200 mt-1">
+                        ⚠️ One-time approval needed for Permit2
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Staking Form */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Amount to Stake
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="Enter amount (e.g., 10.5)"
+                        disabled={isConfirming}
+                        className="w-full p-4 pr-16 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all"
+                      />
+                      <button 
+                        onClick={handleMaxAmount}
+                        disabled={balance === BigInt(0) || isConfirming}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-blue-100 text-blue-600 text-sm font-semibold rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        MAX
+                      </button>
                     </div>
-                    
-                    <div className="ml-4">
-                      {stake.active && (
-                        <button
-                          onClick={() => handleUnstake(stake.index)}
-                          disabled={
-                            isWithdrawing[stake.index] || 
-                            stake.tradeActive || 
-                            isConfirming ||
-                            getTimeUntilUnlock(stake.timestamp) !== 'Unlocked'
-                          }
-                          className={`px-4 py-2 rounded font-medium transition-colors ${
-                            isWithdrawing[stake.index] || 
-                            stake.tradeActive || 
-                            isConfirming ||
-                            getTimeUntilUnlock(stake.timestamp) !== 'Unlocked'
-                              ? 'bg-red-800 cursor-not-allowed opacity-50'
-                              : 'bg-red-600 hover:bg-red-700'
-                          }`}
-                        >
-                          {isWithdrawing[stake.index] ? 'Withdrawing...' : 'Withdraw'}
-                        </button>
-                      )}
-                      
-                      {stake.tradeActive && (
-                        <p className="text-xs text-amber-400 mt-2">
-                          ⚠️ Trade must be exited first
-                        </p>
-                      )}
-                      
-                      {!stake.active && (
-                        <p className="text-xs text-gray-400 mt-2">
-                          Already withdrawn
-                        </p>
-                      )}
+                    {isValidAmount && !hasEnoughBalance && (
+                      <p className="mt-2 text-sm text-red-600">Insufficient balance</p>
+                    )}
+                  </div>
+
+                  {/* Stake Button */}
+                  <button
+                    onClick={handleStakeWithPermit2}
+                    disabled={!isValidAmount || !hasEnoughBalance || isStaking || !walletAddress || isConfirming}
+                    className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                      isStaking || !isValidAmount || !hasEnoughBalance || isConfirming
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl'
+                    }`}
+                  >
+                    {isStaking ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                        Staking...
+                      </span>
+                    ) : (
+                      '🚀 Stake with Permit2'
+                    )}
+                  </button>
+                </div>
+
+                {/* Info Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <h4 className="font-semibold text-blue-800 mb-2">📊 Trading Strategy</h4>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• 2% of staked amount used for trading</li>
+                      <li>• Automated profit generation</li>
+                      <li>• Real-time value tracking</li>
+                    </ul>
+                  </div>
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <h4 className="font-semibold text-green-800 mb-2">🎁 Rewards</h4>
+                    <ul className="text-sm text-green-700 space-y-1">
+                      <li>• Claim rewards on Sundays</li>
+                      <li>• 10-minute lock period (testing)</li>
+                      <li>• Profit-based reward system</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Withdraw Tab Content */}
+            {activeTab === 'withdraw' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Your Stakes</h2>
+                    <p className="text-gray-600">Manage and withdraw your staked tokens</p>
+                  </div>
+                  <button
+                    onClick={fetchUserStakes}
+                    disabled={isLoadingStakes}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  >
+                    {isLoadingStakes ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                        Refreshing...
+                      </>
+                    ) : (
+                      <>
+                        🔄 Refresh
+                      </>
+                    )}
+                  </button>
+                </div>
+                
+                {isLoadingStakes ? (
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
+                    <p className="text-gray-600">Loading your stakes...</p>
+                  </div>
+                ) : stakes.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="text-6xl mb-4">💼</div>
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">No Stakes Found</h3>
+                    <p className="text-gray-600 mb-6">Start by staking some tokens to see them here!</p>
+                    <button
+                      onClick={() => setActiveTab('stake')}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Start Staking
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {stakes.map((stake, index) => (
+                      <div key={index} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-4">
+                              <h3 className="text-lg font-semibold text-gray-800">
+                                Stake #{stake.index}
+                              </h3>
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                stake.active 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-gray-100 text-gray-600'
+                              }`}>
+                                {stake.active ? '🟢 Active' : '⚫ Inactive'}
+                              </span>
+                              {stake.tradeActive && (
+                                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                                  📈 Trading
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                              <div className="bg-blue-50 rounded-lg p-3">
+                                <p className="text-xs text-blue-600 font-medium mb-1">Staked Amount</p>
+                                <p className="font-mono font-semibold text-blue-800">{formatBigInt(stake.amount)} WST</p>
+                              </div>
+                              <div className="bg-purple-50 rounded-lg p-3">
+                                <p className="text-xs text-purple-600 font-medium mb-1">Trading Amount</p>
+                                <p className="font-mono font-semibold text-purple-800">{formatBigInt(stake.tradingAmount)} WST</p>
+                              </div>
+                              <div className="bg-green-50 rounded-lg p-3">
+                                <p className="text-xs text-green-600 font-medium mb-1">Current Value</p>
+                                <p className="font-mono font-semibold text-green-800">{formatBigInt(stake.currentTradeValue)} WST</p>
+                              </div>
+                              <div className="bg-yellow-50 rounded-lg p-3">
+                                <p className="text-xs text-yellow-600 font-medium mb-1">Rewards</p>
+                                <p className="font-mono font-semibold text-yellow-800">{formatBigInt(stake.claimableRewards)} RWD</p>
+                              </div>
+                              <div className="bg-gray-50 rounded-lg p-3">
+                                <p className="text-xs text-gray-600 font-medium mb-1">Staked On</p>
+                                <p className="text-xs text-gray-800">{formatTimestamp(stake.timestamp)}</p>
+                              </div>
+                              <div className="bg-indigo-50 rounded-lg p-3">
+                                <p className="text-xs text-indigo-600 font-medium mb-1">Lock Status</p>
+                                <p className={`text-xs font-semibold ${
+                                  getTimeUntilUnlock(stake.timestamp) === 'Unlocked' 
+                                    ? 'text-green-600' 
+                                    : 'text-orange-600'
+                                }`}>
+                                  {getTimeUntilUnlock(stake.timestamp)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col items-end gap-3">
+                            {stake.active && (
+                              <button
+                                onClick={() => handleUnstake(stake.index)}
+                                disabled={
+                                  isWithdrawing[stake.index] || 
+                                  stake.tradeActive || 
+                                  isConfirming ||
+                                  getTimeUntilUnlock(stake.timestamp) !== 'Unlocked'
+                                }
+                                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+                                  isWithdrawing[stake.index] || 
+                                  stake.tradeActive || 
+                                  isConfirming ||
+                                  getTimeUntilUnlock(stake.timestamp) !== 'Unlocked'
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    : 'bg-red-600 text-white hover:bg-red-700 transform hover:scale-105 shadow-lg hover:shadow-xl'
+                                }`}
+                              >
+                                {isWithdrawing[stake.index] ? (
+                                  <span className="flex items-center gap-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                    Withdrawing...
+                                  </span>
+                                ) : (
+                                  '🏦 Withdraw'
+                                )}
+                              </button>
+                            )}
+                            
+                            {stake.tradeActive && (
+                              <p className="text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
+                                ⚠️ Trade must be exited first
+                              </p>
+                            )}
+                            
+                            {!stake.active && (
+                              <p className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                ✅ Already withdrawn
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Info Section */}
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                  <h4 className="font-semibold text-gray-800 mb-3">📋 Withdrawal Guidelines</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    <div className="flex items-start gap-2">
+                      <span className="text-green-500">✓</span>
+                      <span>Stakes unlock after 10 minutes (testing period)</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-blue-500">ℹ️</span>
+                      <span>Active trades must be exited by backend first</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-purple-500">🎁</span>
+                      <span>Rewards can be claimed separately on Sundays</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-orange-500">💰</span>
+                      <span>Withdrawn stakes return original tokens</span>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-          
-          <div className="mt-4 text-sm text-gray-400">
-            <p>• Stakes must be unlocked (10 minutes after staking)</p>
-            <p>• Active trades must be exited by the backend before withdrawal</p>
-            <p>• Rewards can be claimed separately on Sundays</p>
-            <p>• Withdrawn stakes will transfer your original tokens back</p>
+              </div>
+            )}
           </div>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
