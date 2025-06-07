@@ -440,8 +440,8 @@ export function StakingFormMain() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="w-full bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="max-w-4xl mx-auto p-4">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
@@ -457,27 +457,33 @@ export function StakingFormMain() {
             <div className="flex">
               <button
                 onClick={() => setActiveTab('stake')}
-                className={`flex-1 px-6 py-4 text-center font-semibold transition-all duration-200 ${
+                className={`flex-1 px-6 py-4 text-center font-semibold transition-all duration-300 relative ${
                   activeTab === 'stake'
-                    ? 'bg-blue-600 text-white border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 border-r border-gray-200'
                 }`}
               >
                 <span className="flex items-center justify-center gap-2">
                   💰 Stake Tokens
                 </span>
+                {activeTab === 'stake' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-400"></div>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('withdraw')}
-                className={`flex-1 px-6 py-4 text-center font-semibold transition-all duration-200 ${
+                className={`flex-1 px-6 py-4 text-center font-semibold transition-all duration-300 relative ${
                   activeTab === 'withdraw'
-                    ? 'bg-blue-600 text-white border-b-2 border-blue-600'
+                    ? 'bg-blue-600 text-white shadow-lg'
                     : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
                 }`}
               >
                 <span className="flex items-center justify-center gap-2">
                   🏦 Withdraw Stakes
                 </span>
+                {activeTab === 'withdraw' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-400"></div>
+                )}
               </button>
             </div>
           </div>
@@ -485,7 +491,7 @@ export function StakingFormMain() {
           <div className="p-6 md:p-8">
             {/* Wallet Connection Status */}
             {walletAddress && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl shadow-sm">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                   <div>
@@ -500,7 +506,7 @@ export function StakingFormMain() {
 
             {/* Transaction Status */}
             {showTransactionStatus && (
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl shadow-sm">
                 <div className="flex items-center gap-3">
                   {isConfirming && (
                     <>
@@ -528,7 +534,7 @@ export function StakingFormMain() {
 
             {/* Error Message */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl shadow-sm">
                 <div className="flex items-start gap-3">
                   <span className="text-red-500 text-xl">⚠️</span>
                   <div className="flex-1">
@@ -537,7 +543,7 @@ export function StakingFormMain() {
                   </div>
                   <button
                     onClick={() => setError(null)}
-                    className="text-red-400 hover:text-red-600 transition-colors"
+                    className="text-red-400 hover:text-red-600 transition-colors p-1 hover:bg-red-100 rounded-full"
                   >
                     <span className="text-xl">×</span>
                   </button>
@@ -554,7 +560,7 @@ export function StakingFormMain() {
                 </div>
                 
                 {/* Balance Card */}
-                <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
                   <h3 className="text-lg font-semibold mb-2">Your Balance</h3>
                   <p className="text-3xl font-bold">{formattedBalance} WST</p>
                   <div className="mt-3 text-sm opacity-90">
@@ -580,12 +586,12 @@ export function StakingFormMain() {
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="Enter amount (e.g., 10.5)"
                         disabled={isConfirming}
-                        className="w-full p-4 pr-16 text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all"
+                        className="w-full p-4 pr-16 text-lg border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed transition-all shadow-sm"
                       />
                       <button 
                         onClick={handleMaxAmount}
                         disabled={balance === BigInt(0) || isConfirming}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-blue-100 text-blue-600 text-sm font-semibold rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-blue-100 text-blue-600 text-sm font-semibold rounded-lg hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border border-blue-200 hover:border-blue-300 hover:shadow-sm"
                       >
                         MAX
                       </button>
@@ -599,10 +605,10 @@ export function StakingFormMain() {
                   <button
                     onClick={handleStakeWithPermit2}
                     disabled={!isValidAmount || !hasEnoughBalance || isStaking || !walletAddress || isConfirming}
-                    className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                    className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 border-2 ${
                       isStaking || !isValidAmount || !hasEnoughBalance || isConfirming
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl'
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300'
+                        : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl border-blue-600 hover:border-blue-700'
                     }`}
                   >
                     {isStaking ? (
@@ -618,7 +624,7 @@ export function StakingFormMain() {
 
                 {/* Info Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
                     <h4 className="font-semibold text-blue-800 mb-2">📊 Trading Strategy</h4>
                     <ul className="text-sm text-blue-700 space-y-1">
                       <li>• 2% of staked amount used for trading</li>
@@ -626,7 +632,7 @@ export function StakingFormMain() {
                       <li>• Real-time value tracking</li>
                     </ul>
                   </div>
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
                     <h4 className="font-semibold text-green-800 mb-2">🎁 Rewards</h4>
                     <ul className="text-sm text-green-700 space-y-1">
                       <li>• Claim rewards on Sundays</li>
@@ -649,7 +655,7 @@ export function StakingFormMain() {
                   <button
                     onClick={fetchUserStakes}
                     disabled={isLoadingStakes}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 border-2 border-blue-600 hover:border-blue-700 shadow-md hover:shadow-lg"
                   >
                     {isLoadingStakes ? (
                       <>
@@ -676,7 +682,7 @@ export function StakingFormMain() {
                     <p className="text-gray-600 mb-6">Start by staking some tokens to see them here!</p>
                     <button
                       onClick={() => setActiveTab('stake')}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 border-2 border-blue-600 hover:border-blue-700 shadow-md hover:shadow-lg font-semibold"
                     >
                       Start Staking
                     </button>
@@ -684,49 +690,49 @@ export function StakingFormMain() {
                 ) : (
                   <div className="space-y-4">
                     {stakes.map((stake, index) => (
-                      <div key={index} className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                      <div key={index} className="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-4">
                               <h3 className="text-lg font-semibold text-gray-800">
                                 Stake #{stake.index}
                               </h3>
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
                                 stake.active 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-gray-100 text-gray-600'
+                                  ? 'bg-green-100 text-green-800 border-green-300' 
+                                  : 'bg-gray-100 text-gray-600 border-gray-300'
                               }`}>
                                 {stake.active ? '🟢 Active' : '⚫ Inactive'}
                               </span>
                               {stake.tradeActive && (
-                                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-300">
                                   📈 Trading
                                 </span>
                               )}
                             </div>
                             
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                              <div className="bg-blue-50 rounded-lg p-3">
+                              <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                                 <p className="text-xs text-blue-600 font-medium mb-1">Staked Amount</p>
                                 <p className="font-mono font-semibold text-blue-800">{formatBigInt(stake.amount)} WST</p>
                               </div>
-                              <div className="bg-purple-50 rounded-lg p-3">
+                              <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
                                 <p className="text-xs text-purple-600 font-medium mb-1">Trading Amount</p>
                                 <p className="font-mono font-semibold text-purple-800">{formatBigInt(stake.tradingAmount)} WST</p>
                               </div>
-                              <div className="bg-green-50 rounded-lg p-3">
+                              <div className="bg-green-50 rounded-lg p-3 border border-green-200">
                                 <p className="text-xs text-green-600 font-medium mb-1">Current Value</p>
                                 <p className="font-mono font-semibold text-green-800">{formatBigInt(stake.currentTradeValue)} WST</p>
                               </div>
-                              <div className="bg-yellow-50 rounded-lg p-3">
+                              <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
                                 <p className="text-xs text-yellow-600 font-medium mb-1">Rewards</p>
                                 <p className="font-mono font-semibold text-yellow-800">{formatBigInt(stake.claimableRewards)} RWD</p>
                               </div>
-                              <div className="bg-gray-50 rounded-lg p-3">
+                              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                                 <p className="text-xs text-gray-600 font-medium mb-1">Staked On</p>
                                 <p className="text-xs text-gray-800">{formatTimestamp(stake.timestamp)}</p>
                               </div>
-                              <div className="bg-indigo-50 rounded-lg p-3">
+                              <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-200">
                                 <p className="text-xs text-indigo-600 font-medium mb-1">Lock Status</p>
                                 <p className={`text-xs font-semibold ${
                                   getTimeUntilUnlock(stake.timestamp) === 'Unlocked' 
@@ -749,13 +755,13 @@ export function StakingFormMain() {
                                   isConfirming ||
                                   getTimeUntilUnlock(stake.timestamp) !== 'Unlocked'
                                 }
-                                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
+                                className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 border-2 ${
                                   isWithdrawing[stake.index] || 
                                   stake.tradeActive || 
                                   isConfirming ||
                                   getTimeUntilUnlock(stake.timestamp) !== 'Unlocked'
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                    : 'bg-red-600 text-white hover:bg-red-700 transform hover:scale-105 shadow-lg hover:shadow-xl'
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300'
+                                    : 'bg-red-600 text-white hover:bg-red-700 transform hover:scale-105 shadow-lg hover:shadow-xl border-red-600 hover:border-red-700'
                                 }`}
                               >
                                 {isWithdrawing[stake.index] ? (
@@ -770,13 +776,13 @@ export function StakingFormMain() {
                             )}
                             
                             {stake.tradeActive && (
-                              <p className="text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded-full">
+                              <p className="text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
                                 ⚠️ Trade must be exited first
                               </p>
                             )}
                             
                             {!stake.active && (
-                              <p className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                              <p className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full border border-gray-200">
                                 ✅ Already withdrawn
                               </p>
                             )}
@@ -788,7 +794,7 @@ export function StakingFormMain() {
                 )}
 
                 {/* Info Section */}
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-6 shadow-sm">
                   <h4 className="font-semibold text-gray-800 mb-3">📋 Withdrawal Guidelines</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                     <div className="flex items-start gap-2">

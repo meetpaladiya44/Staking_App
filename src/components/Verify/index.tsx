@@ -76,7 +76,7 @@ export const Verify = () => {
           Verify (Device)
         </Button>
       </LiveFeedback>
-      <LiveFeedback
+      {/* <LiveFeedback
         label={{
           failed: 'Failed to verify',
           pending: 'Verifying',
@@ -96,7 +96,7 @@ export const Verify = () => {
         >
           Verify (Orb)
         </Button>
-      </LiveFeedback>
+      </LiveFeedback> */}
     </div>
   );
 };

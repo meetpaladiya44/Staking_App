@@ -370,19 +370,19 @@ export default function AdminPage() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 p-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="w-full bg-gradient-to-br from-purple-50 to-pink-100">
+      <div className="max-w-7xl mx-auto p-4">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
               ⚡ Trade Admin Dashboard
             </h1>
             <p className="text-gray-600 text-lg">Manage active trades and monitor performance</p>
           </div>
           <Link 
             href="/" 
-            className="mt-4 md:mt-0 inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 border border-gray-200 transition-colors font-medium"
+            className="mt-4 md:mt-0 inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 rounded-lg hover:bg-gray-50 border-2 border-gray-200 hover:border-gray-300 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
           >
             <span>←</span> Back to Home
           </Link>
@@ -390,7 +390,7 @@ export default function AdminPage() {
 
         {/* Admin Wallet Status */}
         {walletAddress && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+          <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
               <div>
@@ -405,7 +405,7 @@ export default function AdminPage() {
 
         {/* Transaction Status */}
         {showTransactionStatus && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl shadow-sm">
             <div className="flex items-center gap-3">
               {isConfirming && (
                 <>
@@ -433,7 +433,7 @@ export default function AdminPage() {
         
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+          <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl shadow-sm">
             <div className="flex items-start gap-3">
               <span className="text-red-500 text-xl">⚠️</span>
               <div className="flex-1">
@@ -442,7 +442,7 @@ export default function AdminPage() {
               </div>
               <button
                 onClick={() => setError(null)}
-                className="text-red-400 hover:text-red-600 transition-colors"
+                className="text-red-400 hover:text-red-600 transition-colors p-1 hover:bg-red-100 rounded-full"
               >
                 <span className="text-xl">×</span>
               </button>
@@ -451,7 +451,7 @@ export default function AdminPage() {
         )}
         
         {/* Main Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 overflow-hidden">
           <div className="border-b border-gray-200 bg-gray-50 p-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
@@ -461,7 +461,7 @@ export default function AdminPage() {
               <button
                 onClick={loadActiveTrades}
                 disabled={loading}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium border-2 border-blue-600 hover:border-blue-700 shadow-md hover:shadow-lg"
               >
                 {loading ? (
                   <>
@@ -495,7 +495,7 @@ export default function AdminPage() {
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-gray-200">
+                      <tr className="border-b-2 border-gray-200">
                         <th className="text-left py-4 px-2 font-semibold text-gray-700">User</th>
                         <th className="text-left py-4 px-2 font-semibold text-gray-700">Stake #</th>
                         <th className="text-left py-4 px-2 font-semibold text-gray-700">Amount</th>
@@ -516,7 +516,7 @@ export default function AdminPage() {
                         return (
                           <tr key={tradeKey} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                             <td className="py-4 px-2">
-                              <div className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                              <div className="font-mono text-sm bg-gray-100 px-2 py-1 rounded border border-gray-200">
                                 {`${trade.user.slice(0, 6)}...${trade.user.slice(-4)}`}
                               </div>
                             </td>
@@ -532,10 +532,10 @@ export default function AdminPage() {
                                 <button
                                   onClick={() => handleUpdateTradeValue(trade)}
                                   disabled={isUpdating || isExiting || isConfirming}
-                                  className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
+                                  className={`px-3 py-1 text-xs rounded-md font-medium transition-all duration-200 border ${
                                     isUpdating || isConfirming
-                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300'
+                                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-200 hover:border-blue-300 shadow-sm hover:shadow-md'
                                   }`}
                                 >
                                   {isUpdating ? 'Updating...' : 'Update'}
@@ -543,10 +543,10 @@ export default function AdminPage() {
                                 <button
                                   onClick={() => handleExitTradeAtCurrentValue(trade)}
                                   disabled={isUpdating || isExiting || isConfirming}
-                                  className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
+                                  className={`px-3 py-1 text-xs rounded-md font-medium transition-all duration-200 border ${
                                     isExiting || isConfirming
-                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                      : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300'
+                                      : 'bg-purple-100 text-purple-700 hover:bg-purple-200 border-purple-200 hover:border-purple-300 shadow-sm hover:shadow-md'
                                   }`}
                                 >
                                   Exit (Current)
@@ -554,10 +554,10 @@ export default function AdminPage() {
                                 <button
                                   onClick={() => handleExitTrade(trade, true)}
                                   disabled={isUpdating || isExiting || isConfirming}
-                                  className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
+                                  className={`px-3 py-1 text-xs rounded-md font-medium transition-all duration-200 border ${
                                     isExiting || isConfirming
-                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300'
+                                      : 'bg-green-100 text-green-700 hover:bg-green-200 border-green-200 hover:border-green-300 shadow-sm hover:shadow-md'
                                   }`}
                                 >
                                   Exit (Profit)
@@ -565,10 +565,10 @@ export default function AdminPage() {
                                 <button
                                   onClick={() => handleExitTrade(trade, false)}
                                   disabled={isUpdating || isExiting || isConfirming}
-                                  className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${
+                                  className={`px-3 py-1 text-xs rounded-md font-medium transition-all duration-200 border ${
                                     isExiting || isConfirming
-                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                      : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300'
+                                      : 'bg-red-100 text-red-700 hover:bg-red-200 border-red-200 hover:border-red-300 shadow-sm hover:shadow-md'
                                   }`}
                                 >
                                   Exit (Loss)
@@ -592,14 +592,14 @@ export default function AdminPage() {
                     const profitLossPercentage = (profitLoss / Number(trade.tradingAmount)) * 100;
                     
                     return (
-                      <div key={tradeKey} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                      <div key={tradeKey} className="bg-gray-50 border-2 border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold text-gray-800">Stake #{trade.stakeIndex}</span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${
                               profitLoss >= 0 
-                                ? 'bg-green-100 text-green-700' 
-                                : 'bg-red-100 text-red-700'
+                                ? 'bg-green-100 text-green-700 border-green-300' 
+                                : 'bg-red-100 text-red-700 border-red-300'
                             }`}>
                               {profitLoss >= 0 ? '+' : ''}{profitLossPercentage.toFixed(2)}%
                             </span>
@@ -609,7 +609,7 @@ export default function AdminPage() {
                         <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
                           <div>
                             <p className="text-gray-600 mb-1">User</p>
-                            <p className="font-mono bg-white px-2 py-1 rounded text-xs">
+                            <p className="font-mono bg-white px-2 py-1 rounded text-xs border border-gray-200">
                               {`${trade.user.slice(0, 6)}...${trade.user.slice(-4)}`}
                             </p>
                           </div>
@@ -631,10 +631,10 @@ export default function AdminPage() {
                           <button
                             onClick={() => handleUpdateTradeValue(trade)}
                             disabled={isUpdating || isExiting || isConfirming}
-                            className={`px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+                            className={`px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 border-2 ${
                               isUpdating || isConfirming
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300'
+                                : 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600 hover:border-blue-700 shadow-md hover:shadow-lg'
                             }`}
                           >
                             {isUpdating ? 'Updating...' : '📊 Update'}
@@ -642,10 +642,10 @@ export default function AdminPage() {
                           <button
                             onClick={() => handleExitTradeAtCurrentValue(trade)}
                             disabled={isUpdating || isExiting || isConfirming}
-                            className={`px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+                            className={`px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 border-2 ${
                               isExiting || isConfirming
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-purple-600 text-white hover:bg-purple-700'
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300'
+                                : 'bg-purple-600 text-white hover:bg-purple-700 border-purple-600 hover:border-purple-700 shadow-md hover:shadow-lg'
                             }`}
                           >
                             🔄 Exit Current
@@ -653,10 +653,10 @@ export default function AdminPage() {
                           <button
                             onClick={() => handleExitTrade(trade, true)}
                             disabled={isUpdating || isExiting || isConfirming}
-                            className={`px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+                            className={`px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 border-2 ${
                               isExiting || isConfirming
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-green-600 text-white hover:bg-green-700'
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300'
+                                : 'bg-green-600 text-white hover:bg-green-700 border-green-600 hover:border-green-700 shadow-md hover:shadow-lg'
                             }`}
                           >
                             📈 Exit Profit
@@ -664,10 +664,10 @@ export default function AdminPage() {
                           <button
                             onClick={() => handleExitTrade(trade, false)}
                             disabled={isUpdating || isExiting || isConfirming}
-                            className={`px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+                            className={`px-3 py-2 text-sm rounded-lg font-medium transition-all duration-200 border-2 ${
                               isExiting || isConfirming
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-red-600 text-white hover:bg-red-700'
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-gray-300'
+                                : 'bg-red-600 text-white hover:bg-red-700 border-red-600 hover:border-red-700 shadow-md hover:shadow-lg'
                             }`}
                           >
                             📉 Exit Loss
@@ -684,32 +684,32 @@ export default function AdminPage() {
         
         {/* Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-md border-2 border-gray-200 p-6 hover:shadow-lg transition-shadow">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">🎮 Action Descriptions</h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-start gap-3">
-                <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-semibold">📊</span>
+                <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-semibold border border-blue-200">📊</span>
                 <div>
                   <p className="font-medium text-gray-800">Update Value</p>
                   <p className="text-gray-600">Randomly simulates market price movement</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xs font-semibold">🔄</span>
+                <span className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xs font-semibold border border-purple-200">🔄</span>
                 <div>
                   <p className="font-medium text-gray-800">Exit (Current)</p>
                   <p className="text-gray-600">Exits at current cron job processed value</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-semibold">📈</span>
+                <span className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-semibold border border-green-200">📈</span>
                 <div>
                   <p className="font-medium text-gray-800">Exit (Profit)</p>
                   <p className="text-gray-600">Forces profitable exit (10-20% gain)</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xs font-semibold">📉</span>
+                <span className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-xs font-semibold border border-red-200">📉</span>
                 <div>
                   <p className="font-medium text-gray-800">Exit (Loss)</p>
                   <p className="text-gray-600">Forces losing exit (0-10% loss)</p>
@@ -718,7 +718,7 @@ export default function AdminPage() {
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow-md border-2 border-gray-200 p-6 hover:shadow-lg transition-shadow">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">⚙️ System Information</h3>
             <div className="space-y-3 text-sm text-gray-600">
               <div className="flex items-center gap-2">
