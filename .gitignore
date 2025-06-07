@@ -20,6 +20,8 @@
 # production
 /build
 
+/WorldStaking.sol
+
 # misc
 .DS_Store
 *.pem

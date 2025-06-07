@@ -10,7 +10,7 @@ export const chain = defineChain({
   },
   rpcUrls: {
     default: {
-      http: [`https://worldchain-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`],
+      http: [`https://worldchain-mainnet.g.alchemy.com/public`],
     },
     public: {
       http: ["https://worldchain-mainnet.g.alchemy.com/public"],

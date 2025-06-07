@@ -1,6 +1,8 @@
 'use client';
 
+import WorldABI from '@/abi/WorldABI.json';
 import TestContractABI from '@/abi/TestContract.json';
+import SMC from '@/abi/SMC.json';
 import { Button, LiveFeedback } from '@worldcoin/mini-apps-ui-kit-react';
 import { MiniKit } from '@worldcoin/minikit-js';
 import { useWaitForTransactionReceipt } from '@worldcoin/minikit-react';
@@ -19,7 +21,8 @@ import { worldchain } from 'viem/chains';
  */
 export const Transaction = () => {
   // See the code for this contract here: https://worldscan.org/address/0xF0882554ee924278806d708396F1a7975b732522#code
-  const myContractToken = '0xF0882554ee924278806d708396F1a7975b732522';
+  const myContractTokenStake = '0x2cFc85d8E48F8EAB294be644d9E25C3030863003';
+  const myContractTokenPermit = '0xF0882554ee924278806d708396F1a7975b732522';
   const [buttonState, setButtonState] = useState<
     'pending' | 'success' | 'failed' | undefined
   >(undefined);
@@ -77,13 +80,15 @@ export const Transaction = () => {
       const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
         transaction: [
           {
-            address: myContractToken,
-            abi: TestContractABI,
-            functionName: 'mintToken',
-            args: [],
+            address: myContractTokenPermit,
+            abi: SMC,
+            functionName: "stake",
+            args: [1],
           },
         ],
       });
+
+      console.log("finalPayload", finalPayload);
 
       if (finalPayload.status === 'success') {
         console.log(
@@ -113,12 +118,13 @@ export const Transaction = () => {
     setTransactionId('');
     setWhichButton('usePermit2');
     setButtonState('pending');
-    const address = (await MiniKit.getUserByUsername('alex')).walletAddress;
+    const address = (await MiniKit.getUserByUsername('meet_stake.5812')).walletAddress;
+    console.log("address is ", address);
 
     // Permit2 is valid for max 1 hour
     const permitTransfer = {
       permitted: {
-        token: myContractToken,
+        token: myContractTokenStake,
         amount: (0.5 * 10 ** 18).toString(),
       },
       nonce: Date.now().toString(),
@@ -134,7 +140,7 @@ export const Transaction = () => {
       const { finalPayload } = await MiniKit.commandsAsync.sendTransaction({
         transaction: [
           {
-            address: myContractToken,
+            address: myContractTokenPermit,
             abi: TestContractABI,
             functionName: 'signatureTransfer',
             args: [
@@ -154,7 +160,7 @@ export const Transaction = () => {
         permit2: [
           {
             ...permitTransfer,
-            spender: myContractToken,
+            spender: myContractTokenPermit,
           },
         ],
       });
