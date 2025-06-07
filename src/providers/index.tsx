@@ -4,8 +4,8 @@ import { Session } from 'next-auth';
 import { SessionProvider } from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import type { ReactNode } from 'react';
-import { ThirdwebProvider } from '../app/thirdweb';
-import { client } from '../app/client';
+// import { ThirdwebProvider } from '../app/thirdweb';
+// import { client } from '../app/client';
 
 const ErudaProvider = dynamic(
   () => import('@/providers/Eruda').then((c) => c.ErudaProvider),
@@ -36,11 +36,11 @@ export default function ClientProviders({
 }: ClientProvidersProps) {
   return (
     <ErudaProvider>
-      <ThirdwebProvider>
+      {/* <ThirdwebProvider> */}
         <MiniKitProvider>
           <SessionProvider session={session}>{children}</SessionProvider>
         </MiniKitProvider>
-      </ThirdwebProvider>
+      {/* </ThirdwebProvider> */}
     </ErudaProvider>
   );
 }

@@ -64,6 +64,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
         // Optionally, fetch the user info from your own database
         const userInfo = await MiniKit.getUserInfo(finalPayload.address);
+        // console.log('userInfo', userInfo);
+        // console.log('finalPayload', finalPayload);
 
         return {
           id: finalPayload.address,

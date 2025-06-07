@@ -8,18 +8,22 @@ export async function POST(request: NextRequest) {
   try {
     // Parse request body
     const body = await request.json();
-    const { influencerId, username } = body;
+    const { influencerId, username, walletAddress } = body;
 
-    if (!influencerId ) {
+    console.log("influencerId", influencerId);
+    console.log("username", username);
+    console.log("walletAddress", walletAddress);
+
+    if (!influencerId) {
       return NextResponse.json(
         { error: "Influencer ID is required" },
         { status: 400 }
       );
     }
 
-    if (!username ) {
+    if (!walletAddress) {
       return NextResponse.json(
-        { error: "Username is required" },
+        { error: "Wallet address is required" },
         { status: 400 }
       );
     }
@@ -59,7 +63,13 @@ export async function POST(request: NextRequest) {
     const updateResult = await influencersCollection.updateOne(
       { _id: objectId },
       {
-        $addToSet: { subscribers: username },
+        $addToSet: {
+          subscribers: {
+            username: username,
+            address: walletAddress,
+            subscribedAt: new Date(),
+          },
+        },
       }
     );
     console.timeEnd("update-subscribers");
