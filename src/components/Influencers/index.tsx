@@ -2,7 +2,7 @@
 import { Influencer, InfluencerWithSubscription } from '@/types/types'
 import { Button, LiveFeedback, Marble, AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter } from '@worldcoin/mini-apps-ui-kit-react'
 import { MiniKit } from '@worldcoin/minikit-js'
-import { CheckCircleSolid } from 'iconoir-react'
+import { CheckCircleSolid, Crown } from 'iconoir-react'
 import { useSession } from 'next-auth/react'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
@@ -142,26 +142,26 @@ export const Influencers = () => {
   // Loading state with skeleton loaders
   if (loading) {
     return (
-      <div className="w-full bg-neutral-900 rounded-2xl border-none shadow-md">
+      <div className="w-full bg-zinc-900 rounded-3xl border-none shadow-md transition-colors duration-200">
         <div className="px-6 py-5 border-b border-neutral-800">
-          <h2 className="text-2xl font-semibold text-neutral-100 font-['Inter'] tracking-tight">
+          <h2 className="text-2xl font-semibold text-center text-neutral-100 tracking-tight">
             Top Crypto Influencers
           </h2>
         </div>
-        <div className="p-6 space-y-4">
-          {[...Array(5)].map((_, index) => (
+        <div className="space-y-4 p-4">
+          {[...Array(3)].map((_, index) => (
             <div
               key={index}
-              className="flex flex-col gap-2 items-center justify-between p-4 bg-neutral-800/50 border-none animate-pulse"
+              className="flex gap-2 items-center justify-between p-4 bg-neutral-800/50 border-none rounded-xl animate-pulse"
             >
               <div className="flex items-center space-x-4 w-full">
-                <div className="h-10 w-10 rounded-full bg-neutral-700"></div>
-                <div className="flex flex-col flex-1">
-                  <div className="h-4 bg-neutral-700 rounded w-24 mb-2"></div>
-                  <div className="h-3 bg-neutral-700 rounded w-20"></div>
+                <div className="h-6 w-6 rounded-full bg-neutral-700"></div>
+                <div className="flex flex-col flex-grow">
+                  <div className="h-4 w-32 bg-neutral-700 rounded mb-2"></div>
+                  <div className="h-3 w-24 bg-neutral-700 rounded"></div>
                 </div>
               </div>
-              <div className="w-full h-10 bg-neutral-700 rounded-full"></div>
+              <div className="h-8 w-24 bg-neutral-700 rounded-full"></div>
             </div>
           ))}
         </div>
@@ -171,29 +171,30 @@ export const Influencers = () => {
 
   return (
     <>
-      <div className="w-full bg-zinc-900 rounded-3xl border-none shadow-md">
+      <div className="w-full bg-neutral-900 rounded-3xl border-none shadow-md transition-colors duration-200">
         <div className="px-6 py-5 border-b border-neutral-800">
-          <h2 className="text-2xl font-semibold text-neutral-100 tracking-tight">
+          <h2 className="text-2xl font-semibold text-center text-neutral-100 tracking-tight">
             Top Crypto Influencers
           </h2>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-2 space-y-4">
           {influencers.map((influencer: InfluencerWithSubscription) => (
             <div
               key={influencer.id}
-              className="flex flex-col gap-2 items-center justify-between p-4 bg-neutral-800/50 border-none hover:bg-neutral-800/70 transition-all duration-200"
+              className="flex gap-2 items-center justify-between p-4 bg-neutral-800/50 border-none hover:bg-neutral-800/70 transition-all duration-200 rounded-xl"
             >
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4 w-full">
                 <Marble
                   src={influencer.image}
-                  className="h-10 w-10 rounded-full object-cover"
+                  className="h-6 w-6 rounded-full object-cover ring-2 ring-offset-2 ring-blue-500"
                   alt={influencer.name}
                 />
                 <div className="flex flex-col">
                   <span className="text-base font-medium text-neutral-100 font-['Inter']">
                     @{influencer.name}
                   </span>
-                  <span className="text-sm text-neutral-400 font-['Inter']">
+                  <span className="text-sm text-neutral-400 font-['Inter'] flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
                     {influencer.subscribers?.length || 0} subscribers
                   </span>
                 </div>
@@ -202,25 +203,30 @@ export const Influencers = () => {
                 variant={influencer.isSubscribed ? 'secondary' : 'primary'}
                 onClick={() => !influencer.isSubscribed && handleSubscribe(influencer.id, influencer.name)}
                 disabled={subscribingTo === influencer.id || !session || influencer.isSubscribed}
-                className={`rounded-full py-2 w-full text-sm font-medium border transition-all duration-200 ${influencer.isSubscribed
-                  ? '!text-green-700 border !border-green-700 hover:!bg-green-200'
-                  : '!text-neutral-100 !bg-blue-600 hover:!bg-blue-700'
+                className={`rounded-full py-2 text-sm font-medium border transition-all duration-200 ${influencer.isSubscribed
+                  ? 'text-green-700 border border-green-700 !bg-green-50'
+                  : 'text-white bg-blue-600 hover:!bg-blue-700'
                   }`}
               >
                 {subscribingTo === influencer.id ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-neutral-100"></div>
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                     <span>Subscribing...</span>
                   </div>
                 ) : influencer.isSubscribed ? (
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-center space-x-2">
                     <CheckCircleSolid className="h-5 w-5" />
                     <span>Subscribed</span>
                   </div>
                 ) : !session ? (
                   'Login to Subscribe'
                 ) : (
-                  'Subscribe'
+                  <span className='flex items-center gap-2'>
+                    <Crown className='h-5 w-5' />
+                    <span className='text-sm'>
+                      Subscribe
+                    </span>
+                  </span>
                 )}
               </Button>
               {subscriptionMessages[influencer.id] && (
