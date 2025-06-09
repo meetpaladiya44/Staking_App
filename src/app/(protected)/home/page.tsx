@@ -15,43 +15,43 @@ export default async function Home() {
 
   return (
     <>
-      <Page.Header className="p-0 !bg-neutral-900 sticky top-0 z-50">
+      <Page.Header className="p-0 !bg-neutral-900 sticky top-0 z-50 border-b border-neutral-800">
         <div className='flex items-center justify-between p-3'>
           <Username />
           <InfoButton />
         </div>
       </Page.Header>
-      
-      <Page.Main className="min-h-screen bg-gray-50">
+
+      <Page.Main className="min-h-screen bg-neutral-900">
         {/* Main Container with proper spacing */}
-        <div className="w-full max-w-none space-y-8 pb-20">
-          
+        <div className="w-full max-w-none space-y-8 pb-20 px-4">
+
           {/* Admin Section */}
           <section className="w-full">
             <AdminPage />
           </section>
-          
+
           {/* Staking Section */}
           <section className="w-full">
             <StakingFormMain />
           </section>
-          
+
           {/* Additional Components Section */}
-          <section className="w-full max-w-fit px-2 space-y-8">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-              <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-                <h2 className="text-xl font-bold text-gray-800">Community & Verification</h2>
-                <p className="text-gray-600">Connect with influencers and verify your identity</p>
+          <section className="w-full max-w-fit space-y-8">
+            <div className="bg-neutral-800 rounded-2xl shadow-lg border border-neutral-700 overflow-hidden">
+              <div className="border-b border-neutral-700 bg-neutral-800 px-6 py-4">
+                <h2 className="text-xl font-bold text-white">Community & Verification</h2>
+                <p className="text-neutral-400">Connect with influencers and verify your identity</p>
               </div>
-              <div className="">
+              <div className="bg-neutral-800">
                 <Influencers />
-                <div className="border-t border-gray-200 pt-6">
+                <div className="border-t border-neutral-700 pt-6">
                   <Verify />
                 </div>
               </div>
             </div>
           </section>
-          
+
         </div>
       </Page.Main>
     </>
