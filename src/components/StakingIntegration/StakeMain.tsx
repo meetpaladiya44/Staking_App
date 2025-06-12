@@ -40,7 +40,7 @@ interface StakeDetails {
 }
 
 export function StakingFormMain() {
-  const { data: session } = useSession()
+  const { data: session } = useSession();
   const [amount, setAmount] = useState('');
   const [isApproving, setIsApproving] = useState(false);
   const [isStaking, setIsStaking] = useState(false);
@@ -70,26 +70,30 @@ export function StakingFormMain() {
     transactionId: transactionId,
   });
   useEffect(() => {
-    const fetchWalletAddress = async () => {
-      if (session?.user?.username) {
+    const setWalletAndFetchData = async () => {
+      if (session?.user?.id) {
         try {
-          const user = await MiniKit.getUserByUsername(`${session.user.username}`);
-          console.log("aa gaya user wait krne ke bad", user);
-          if (user?.walletAddress) {
-            // setWalletAddress(user.walletAddress);
-            setWalletAddress('0xd53d5705924491cdf52e00db9920599090243486');
-            // Fetch balance and allowance after getting wallet address
-            fetchBalanceAndAllowance();
-          }
+          console.log("session", session);
+          console.log("session?.user?.id", session?.user?.id);
+          
+          // Use session.user.id directly as wallet address
+          const walletAddr = session.user.id;
+          
+          setWalletAddress(walletAddr);
+          
+          // Fetch balance and allowance with the wallet address
+          await fetchBalanceAndAllowanceWithAddress(walletAddr);
+          
+          // Also fetch user stakes
+          await fetchUserStakesWithAddress(walletAddr);
         } catch (error) {
-          setWalletAddress('0xd53d5705924491cdf52e00db9920599090243486');
-          console.error('Error fetching wallet address:', error);
-          setError('Failed to fetch wallet address');
+          console.error('Error setting wallet address:', error);
+          setError('Failed to set wallet address');
         }
       }
     };
-    fetchWalletAddress();
-  }, [session?.user?.username]); // Dependency on session username
+    setWalletAndFetchData();
+  }, [session?.user?.id]); // Dependency on session user id
   // Refresh data when transaction is confirmed
   useEffect(() => {
     if (isConfirmed) {
@@ -98,16 +102,16 @@ export function StakingFormMain() {
       setTransactionId(''); // Reset transaction tracking
     }
   }, [isConfirmed]);
-  // Fetch user's token balance and allowance
-  const fetchBalanceAndAllowance = async () => {
-    // if (!walletAddress) return;
+  // Fetch user's token balance and allowance with specific wallet address
+  const fetchBalanceAndAllowanceWithAddress = async (walletAddr: string) => {
+    if (!walletAddr) return;
     try {
       // Get token balance
       const balanceResult = await client.readContract({
         address: CONTRACT_ADDRESSES.STAKING_TOKEN as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'balanceOf',
-        args: ['0xd53d5705924491cdf52e00db9920599090243486' as `0x${string}`],
+        args: [walletAddr as `0x${string}`],
       });
       setBalance(balanceResult as bigint);
       // Get current Permit2 allowance
@@ -115,13 +119,18 @@ export function StakingFormMain() {
         address: CONTRACT_ADDRESSES.STAKING_TOKEN as `0x${string}`,
         abi: ERC20_ABI,
         functionName: 'allowance',
-        args: [walletAddress as `0x${string}`, CONTRACT_ADDRESSES.PERMIT2 as `0x${string}`],
+        args: [walletAddr as `0x${string}`, CONTRACT_ADDRESSES.PERMIT2 as `0x${string}`],
       });
       setPermit2Allowance(permit2AllowanceResult as bigint);
     } catch (err) {
       console.error('Error fetching balance/allowance:', err);
       setError('Failed to fetch wallet data');
     }
+  };
+
+  // Fetch user's token balance and allowance (using state wallet address)
+  const fetchBalanceAndAllowance = async () => {
+    await fetchBalanceAndAllowanceWithAddress(walletAddress);
   };
   const handleApprove = async () => {
     if (!walletAddress) {
@@ -184,7 +193,7 @@ export function StakingFormMain() {
       }
       // Check if user has enough balance
       if (amountToStake > balance) {
-        throw new Error(`Insufficient balance. You have ${formatBigInt(balance)} WST, but trying to stake ${amount} WST`);
+        throw new Error(`Insufficient balance. You have ${formatBigInt(balance)} WLD, but trying to stake ${amount} WLD`);
       }
       console.log('Starting Permit2 staking process...');
       console.log('Amount to stake:', amount, 'Wei:', amountToStake.toString());
@@ -255,6 +264,33 @@ export function StakingFormMain() {
       } else {
         console.log('Staking transaction sent:', finalPayload.transaction_id);
         setTransactionId(finalPayload.transaction_id);
+
+                  // Store staking information in database
+          try {
+            const response = await fetch('/api/stake', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                stakeAmount: amount,
+                walletAddress: walletAddress,
+                username: session?.user?.username || session?.user?.id, // Use username or id as fallback
+                transactionId: finalPayload.transaction_id,
+              }),
+            });
+
+          const result = await response.json();
+          if (response.ok) {
+            console.log('Staking record created successfully:', result);
+          } else {
+            console.error('Failed to create staking record:', result.error);
+          }
+        } catch (dbError) {
+          console.error('Error storing staking record:', dbError);
+          // Don't show error to user as the transaction was successful
+        }
+
         setAmount(''); // Clear form after successful transaction
       }
 
@@ -295,9 +331,9 @@ export function StakingFormMain() {
   // Show transaction confirmation status
   const showTransactionStatus = transactionId && (isConfirming || isConfirmed);
 
-  // Add function to fetch user's stakes
-  const fetchUserStakes = async () => {
-    if (!walletAddress) return;
+  // Add function to fetch user's stakes with specific wallet address
+  const fetchUserStakesWithAddress = async (walletAddr: string) => {
+    if (!walletAddr) return;
 
     try {
       setIsLoadingStakes(true);
@@ -307,20 +343,20 @@ export function StakingFormMain() {
         address: CONTRACT_ADDRESSES.WORLD_STAKING as `0x${string}`,
         abi: WORLD_STAKING_ABI,
         functionName: 'getStakeCount',
-        args: [walletAddress as `0x${string}`],
+        args: [walletAddr as `0x${string}`],
       });
 
       const totalStakes = Number(stakeCount);
       const userStakes: StakeDetails[] = [];
 
-      // Fetch details for each stake
-      for (let i = 0; i < totalStakes; i++) {
-        const stakeDetails = await client.readContract({
-          address: CONTRACT_ADDRESSES.WORLD_STAKING as `0x${string}`,
-          abi: WORLD_STAKING_ABI,
-          functionName: 'getStakeDetails',
-          args: [walletAddress as `0x${string}`, BigInt(i)],
-        });
+              // Fetch details for each stake
+        for (let i = 0; i < totalStakes; i++) {
+          const stakeDetails = await client.readContract({
+            address: CONTRACT_ADDRESSES.WORLD_STAKING as `0x${string}`,
+            abi: WORLD_STAKING_ABI,
+            functionName: 'getStakeDetails',
+            args: [walletAddr as `0x${string}`, BigInt(i)],
+          });
 
         const [amount, timestamp, tradingAmount, currentTradeValue, tradeActive, claimableRewards, active] = stakeDetails as [bigint, bigint, bigint, bigint, boolean, bigint, boolean];
 
@@ -342,6 +378,32 @@ export function StakingFormMain() {
       setError('Failed to fetch stakes');
     } finally {
       setIsLoadingStakes(false);
+    }
+  };
+
+  // Add function to fetch user's stakes (using state wallet address)
+  const fetchUserStakes = async () => {
+    await fetchUserStakesWithAddress(walletAddress);
+  };
+
+  // Helper function to fetch database stakes (for logging/tracking purposes)
+  const fetchDatabaseStakes = async () => {
+    if (!walletAddress) return;
+    
+    try {
+      const response = await fetch(`/api/stake?walletAddress=${walletAddress}`);
+      const result = await response.json();
+      
+      if (response.ok) {
+        console.log('Database stakes:', result);
+        return result.stakes;
+      } else {
+        console.error('Failed to fetch database stakes:', result.error);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching database stakes:', error);
+      return [];
     }
   };
 
@@ -416,7 +478,7 @@ export function StakingFormMain() {
   // Add effect to fetch stakes when wallet address changes
   useEffect(() => {
     if (walletAddress) {
-      fetchUserStakes();
+      fetchUserStakesWithAddress(walletAddress);
     }
   }, [walletAddress]);
 
@@ -458,8 +520,8 @@ export function StakingFormMain() {
               <button
                 onClick={() => setActiveTab('stake')}
                 className={`flex-1 px-6 py-4 text-center font-semibold transition-all duration-300 relative ${activeTab === 'stake'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'text-neutral-400 hover:text-blue-400 hover:bg-neutral-700 border-r border-neutral-700'
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'text-neutral-400 hover:text-blue-400 hover:bg-neutral-700 border-r border-neutral-700'
                   }`}
               >
                 <span className="flex items-center justify-center gap-2">
@@ -472,8 +534,8 @@ export function StakingFormMain() {
               <button
                 onClick={() => setActiveTab('withdraw')}
                 className={`flex-1 px-6 py-4 text-center font-semibold transition-all duration-300 relative ${activeTab === 'withdraw'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'text-neutral-400 hover:text-blue-400 hover:bg-neutral-700'
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'text-neutral-400 hover:text-blue-400 hover:bg-neutral-700'
                   }`}
               >
                 <span className="flex items-center justify-center gap-2">
@@ -544,9 +606,9 @@ export function StakingFormMain() {
                 {/* Balance Card */}
                 <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white shadow-lg">
                   <h3 className="text-lg font-semibold mb-2">Your Balance</h3>
-                  <p className="text-3xl font-bold">{formattedBalance} WST</p>
+                  <p className="text-3xl font-bold">{formattedBalance} WLD</p>
                   <div className="mt-3 text-sm opacity-90">
-                    <p>Permit2 Allowance: {formatBigInt(permit2Allowance)} WST</p>
+                    <p>Permit2 Allowance: {formatBigInt(permit2Allowance)} WLD</p>
                     {permit2Allowance === BigInt(0) && (
                       <p className="text-yellow-200 mt-1">
                         ⚠️ One-time approval needed for Permit2
@@ -588,8 +650,8 @@ export function StakingFormMain() {
                     onClick={handleStakeWithPermit2}
                     disabled={!isValidAmount || !hasEnoughBalance || isStaking || !walletAddress || isConfirming}
                     className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 border-2 ${isStaking || !isValidAmount || !hasEnoughBalance || isConfirming
-                        ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed border-neutral-600'
-                        : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl border-blue-600 hover:border-blue-700'
+                      ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed border-neutral-600'
+                      : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl border-blue-600 hover:border-blue-700'
                       }`}
                   >
                     {isStaking ? (
@@ -666,8 +728,8 @@ export function StakingFormMain() {
                                 Stake #{stake.index}
                               </h3>
                               <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${stake.active
-                                  ? 'bg-green-900/50 text-green-400 border-green-700'
-                                  : 'bg-neutral-600 text-neutral-400 border-neutral-500'
+                                ? 'bg-green-900/50 text-green-400 border-green-700'
+                                : 'bg-neutral-600 text-neutral-400 border-neutral-500'
                                 }`}>
                                 {stake.active ? '🟢 Active' : '⚫ Inactive'}
                               </span>
@@ -681,15 +743,15 @@ export function StakingFormMain() {
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                               <div className="bg-neutral-800 rounded-lg p-3 border border-neutral-700">
                                 <p className="text-xs text-blue-400 font-medium mb-1">Staked Amount</p>
-                                <p className="font-mono font-semibold text-white">{formatBigInt(stake.amount)} WST</p>
+                                <p className="font-mono font-semibold text-white">{formatBigInt(stake.amount)} WLD</p>
                               </div>
                               <div className="bg-neutral-800 rounded-lg p-3 border border-neutral-700">
                                 <p className="text-xs text-purple-400 font-medium mb-1">Trading Amount</p>
-                                <p className="font-mono font-semibold text-white">{formatBigInt(stake.tradingAmount)} WST</p>
+                                <p className="font-mono font-semibold text-white">{formatBigInt(stake.tradingAmount)} WLD</p>
                               </div>
                               <div className="bg-neutral-800 rounded-lg p-3 border border-neutral-700">
                                 <p className="text-xs text-green-400 font-medium mb-1">Current Value</p>
-                                <p className="font-mono font-semibold text-white">{formatBigInt(stake.currentTradeValue)} WST</p>
+                                <p className="font-mono font-semibold text-white">{formatBigInt(stake.currentTradeValue)} WLD</p>
                               </div>
                               <div className="bg-neutral-800 rounded-lg p-3 border border-neutral-700">
                                 <p className="text-xs text-yellow-400 font-medium mb-1">Rewards</p>
@@ -713,11 +775,11 @@ export function StakingFormMain() {
                                   getTimeUntilUnlock(stake.timestamp) !== 'Unlocked'
                                 }
                                 className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 border-2 ${isWithdrawing[stake.index] ||
-                                    stake.tradeActive ||
-                                    isConfirming ||
-                                    getTimeUntilUnlock(stake.timestamp) !== 'Unlocked'
-                                    ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed border-neutral-600'
-                                    : 'bg-red-600 text-white hover:bg-red-700 transform hover:scale-105 shadow-lg hover:shadow-xl border-red-600 hover:border-red-700'
+                                  stake.tradeActive ||
+                                  isConfirming ||
+                                  getTimeUntilUnlock(stake.timestamp) !== 'Unlocked'
+                                  ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed border-neutral-600'
+                                  : 'bg-red-600 text-white hover:bg-red-700 transform hover:scale-105 shadow-lg hover:shadow-xl border-red-600 hover:border-red-700'
                                   }`}
                               >
                                 {isWithdrawing[stake.index] ? (
