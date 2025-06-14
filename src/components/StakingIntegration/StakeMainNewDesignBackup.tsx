@@ -6,7 +6,7 @@ import { createPublicClient, http } from 'viem';
 import { worldchain } from 'viem/chains';
 import { CONTRACT_ADDRESSES, ERC20_ABI, WORLD_STAKING_ABI } from '../constants/contracts';
 import { formatBigInt } from '../../utils/format';
-import { useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react';
 import { 
   Button, 
   LiveFeedback, 
@@ -27,6 +27,8 @@ import {
   ArrowUp,
   ArrowDown,
 } from 'iconoir-react';
+import { TrendingUp, BarChart } from 'lucide-react';
+
 // World Chain Mainnet configuration
 const worldChainMainnet = {
   id: 480,
@@ -83,6 +85,7 @@ export function StakingFormMain() {
     chain: worldChainMainnet,
     transport: http('https://worldchain-mainnet.g.alchemy.com/public'),
   });
+  
   // Monitor transaction status
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
     client: client,
@@ -91,6 +94,7 @@ export function StakingFormMain() {
     },
     transactionId: transactionId,
   });
+
   useEffect(() => {
     const setWalletAndFetchData = async () => {
       if (session?.user?.id) {
@@ -116,6 +120,7 @@ export function StakingFormMain() {
     };
     setWalletAndFetchData();
   }, [session?.user?.id]); // Dependency on session user id
+
   // Refresh data when transaction is confirmed
   useEffect(() => {
     if (isConfirmed) {
@@ -124,6 +129,7 @@ export function StakingFormMain() {
       setTransactionId(''); // Reset transaction tracking
     }
   }, [isConfirmed]);
+
   // Fetch user's token balance and allowance with specific wallet address
   const fetchBalanceAndAllowanceWithAddress = async (walletAddr: string) => {
     if (!walletAddr) return;
@@ -136,6 +142,7 @@ export function StakingFormMain() {
         args: [walletAddr as `0x${string}`],
       });
       setBalance(balanceResult as bigint);
+      
       // Get current Permit2 allowance
       const permit2AllowanceResult = await client.readContract({
         address: CONTRACT_ADDRESSES.STAKING_TOKEN as `0x${string}`,
@@ -154,6 +161,7 @@ export function StakingFormMain() {
   const fetchBalanceAndAllowance = async () => {
     await fetchBalanceAndAllowanceWithAddress(walletAddress);
   };
+  
   const handleStakeWithPermit2 = async () => {
     if (!amount || !walletAddress) {
       setError('Wallet not connected or amount not specified');
@@ -176,6 +184,7 @@ export function StakingFormMain() {
       }
       console.log('Starting Permit2 staking process...');
       console.log('Amount to stake:', amount, 'Wei:', amountToStake.toString());
+      
       // Get nonce for permit2
       const wordPos = 0;
       const bitmap = await client.readContract({
@@ -192,6 +201,7 @@ export function StakingFormMain() {
       }
       if (bit === 256) throw new Error('No available nonce found');
       const nonce = BigInt(wordPos * 256 + bit);
+      
       // Create permit transfer data with 30-minute deadline
       const deadline = Math.floor((Date.now() + 30 * 60 * 1000) / 1000).toString();
 
@@ -209,6 +219,7 @@ export function StakingFormMain() {
       };
       console.log('Permit transfer data:', permitTransfer);
       console.log('Transfer details:', transferDetails);
+      
       // Send transaction using World Mini App with Permit2
       const { commandPayload, finalPayload } = await MiniKit.commandsAsync.sendTransaction({
         transaction: [
@@ -237,6 +248,7 @@ export function StakingFormMain() {
           },
         ],
       });
+      
       if (finalPayload.status === 'error') {
         console.error('Error sending staking transaction:', finalPayload);
         setError('Failed to send staking transaction');
@@ -244,20 +256,20 @@ export function StakingFormMain() {
         console.log('Staking transaction sent:', finalPayload.transaction_id);
         setTransactionId(finalPayload.transaction_id);
 
-                  // Store staking information in database
-          try {
-            const response = await fetch('/api/stake', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                stakeAmount: amount,
-                walletAddress: walletAddress,
-                username: session?.user?.username || session?.user?.id, // Use username or id as fallback
-                transactionId: finalPayload.transaction_id,
-              }),
-            });
+        // Store staking information in database
+        try {
+          const response = await fetch('/api/stake', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              stakeAmount: amount,
+              walletAddress: walletAddress,
+              username: session?.user?.username || session?.user?.id, // Use username or id as fallback
+              transactionId: finalPayload.transaction_id,
+            }),
+          });
 
           const result = await response.json();
           if (response.ok) {
@@ -284,11 +296,13 @@ export function StakingFormMain() {
       setIsStaking(false);
     }
   };
+
   const handleMaxAmount = () => {
     if (balance > BigInt(0)) {
       setAmount(formatBigInt(balance));
     }
   };
+
   // Helper function to parse ether
   const parseEther = (value: string): bigint => {
     try {
@@ -299,6 +313,7 @@ export function StakingFormMain() {
       return BigInt(0);
     }
   };
+
   // Validation
   const isValidAmount = amount && parseFloat(amount) > 0;
   const hasEnoughBalance = isValidAmount && parseEther(amount) <= balance;
@@ -328,14 +343,14 @@ export function StakingFormMain() {
       const totalStakes = Number(stakeCount);
       const userStakes: StakeDetails[] = [];
 
-              // Fetch details for each stake
-        for (let i = 0; i < totalStakes; i++) {
-          const stakeDetails = await client.readContract({
-            address: CONTRACT_ADDRESSES.WORLD_STAKING as `0x${string}`,
-            abi: WORLD_STAKING_ABI,
-            functionName: 'getStakeDetails',
-            args: [walletAddr as `0x${string}`, BigInt(i)],
-          });
+      // Fetch details for each stake
+      for (let i = 0; i < totalStakes; i++) {
+        const stakeDetails = await client.readContract({
+          address: CONTRACT_ADDRESSES.WORLD_STAKING as `0x${string}`,
+          abi: WORLD_STAKING_ABI,
+          functionName: 'getStakeDetails',
+          args: [walletAddr as `0x${string}`, BigInt(i)],
+        });
 
         const [amount, timestamp, tradingAmount, currentTradeValue, tradeActive, claimableRewards, active] = stakeDetails as [bigint, bigint, bigint, bigint, boolean, bigint, boolean];
 
@@ -454,48 +469,48 @@ export function StakingFormMain() {
     }
   };
 
-    // Add function to handle claiming rewards
-    const handleClaimRewards = async (stakeIndex: number) => {
-      if (!walletAddress) {
-        setError('Wallet not connected');
-        return;
+  // Add function to handle claiming rewards
+  const handleClaimRewards = async (stakeIndex: number) => {
+    if (!walletAddress) {
+      setError('Wallet not connected');
+      return;
+    }
+
+    try {
+      setError(null);
+      setIsClaimingRewards(prev => ({ ...prev, [stakeIndex]: true }));
+
+      // Send claim rewards transaction
+      const { commandPayload, finalPayload } = await MiniKit.commandsAsync.sendTransaction({
+        transaction: [
+          {
+            address: CONTRACT_ADDRESSES.WORLD_STAKING,
+            abi: WORLD_STAKING_ABI,
+            functionName: 'claimRewards',
+            args: [BigInt(stakeIndex)],
+          },
+        ],
+      });
+
+      if (finalPayload.status === 'error') {
+        console.error('Error sending claim rewards transaction:', finalPayload);
+        setError('Failed to send claim rewards transaction');
+      } else {
+        console.log('Claim rewards transaction sent:', finalPayload.transaction_id);
+        setTransactionId(finalPayload.transaction_id);
       }
-  
-      try {
-        setError(null);
-        setIsClaimingRewards(prev => ({ ...prev, [stakeIndex]: true }));
-  
-        // Send claim rewards transaction
-        const { commandPayload, finalPayload } = await MiniKit.commandsAsync.sendTransaction({
-          transaction: [
-            {
-              address: CONTRACT_ADDRESSES.WORLD_STAKING,
-              abi: WORLD_STAKING_ABI,
-              functionName: 'claimRewards',
-              args: [BigInt(stakeIndex)],
-            },
-          ],
-        });
-  
-        if (finalPayload.status === 'error') {
-          console.error('Error sending claim rewards transaction:', finalPayload);
-          setError('Failed to send claim rewards transaction');
-        } else {
-          console.log('Claim rewards transaction sent:', finalPayload.transaction_id);
-          setTransactionId(finalPayload.transaction_id);
-        }
-  
-      } catch (err: any) {
-        console.error('Error claiming rewards:', err);
-        if (err.message?.includes('user_rejected') || err.message?.includes('cancelled')) {
-          setError('Transaction was cancelled by user');
-        } else {
-          setError(`Failed to claim rewards: ${err.message}`);
-        }
-      } finally {
-        setIsClaimingRewards(prev => ({ ...prev, [stakeIndex]: false }));
+
+    } catch (err: any) {
+      console.error('Error claiming rewards:', err);
+      if (err.message?.includes('user_rejected') || err.message?.includes('cancelled')) {
+        setError('Transaction was cancelled by user');
+      } else {
+        setError(`Failed to claim rewards: ${err.message}`);
       }
-    };
+    } finally {
+      setIsClaimingRewards(prev => ({ ...prev, [stakeIndex]: false }));
+    }
+  };
 
   // Add effect to fetch stakes when wallet address changes
   useEffect(() => {
@@ -503,6 +518,15 @@ export function StakingFormMain() {
       fetchUserStakesWithAddress(walletAddress);
     }
   }, [walletAddress]);
+
+  // Add effect for live countdown timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Math.floor(Date.now() / 1000));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Helper function to format timestamp
   const formatTimestamp = (timestamp: bigint): string => {
@@ -533,127 +557,155 @@ export function StakingFormMain() {
     }
   };
 
-    // Helper function to get lock end date
-    const getLockEndDate = (timestamp: bigint): string => {
-      const lockEndTime = Number(timestamp) + (7 * 24 * 60 * 60); // 7 days lock period
-      const date = new Date(lockEndTime * 1000);
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-    };
+  // Helper function to get lock end date
+  const getLockEndDate = (timestamp: bigint): string => {
+    const lockEndTime = Number(timestamp) + (7 * 24 * 60 * 60); // 7 days lock period
+    const date = new Date(lockEndTime * 1000);
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  };
 
   return (
-    <div className="w-full bg-neutral-900">
-      <div className="max-w-4xl mx-auto py-4">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-            🌍 World Staking Platform
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-indigo-900 to-slate-900 p-4">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Hero Section */}
+        <div className="text-center py-8">
+          <div className="flex items-center justify-center mb-4">
+            <CircularIcon size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 border-4 border-white/20 shadow-2xl">
+              <Star className="h-8 w-8 text-white" />
+            </CircularIcon>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+            World Staking Platform
           </h1>
-          <p className="text-neutral-400 text-lg">Stake your tokens and earn rewards with automated trading</p>
+          <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+            Stake your WLD tokens and earn rewards through automated trading strategies
+          </p>
         </div>
 
-        {/* Main Card */}
-        <div className="bg-neutral-800 rounded-2xl shadow-xl border border-neutral-700 overflow-hidden">
-          {/* Tab Navigation */}
-          <div className="border-b border-neutral-700 bg-neutral-800">
-            <div className="flex">
-              <button
-                onClick={() => setActiveTab('stake')}
-                className={`flex-1 px-6 py-4 text-center font-semibold transition-all duration-300 relative ${activeTab === 'stake'
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'text-neutral-400 hover:text-blue-400 hover:bg-neutral-700 border-r border-neutral-700'
-                  }`}
+        {/* Tab Navigation */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden">
+          <div className="flex bg-white/5">
+            <button
+              onClick={() => setActiveTab('stake')}
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-all duration-300 flex items-center justify-center gap-3 ${
+                activeTab === 'stake'
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-2xl'
+                  : 'text-slate-200 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <TrendingUp className="h-5 w-5" />
+              Stake Tokens
+            </button>
+            <button
+              onClick={() => setActiveTab('withdraw')}
+              className={`flex-1 px-6 py-4 text-center font-semibold transition-all duration-300 flex items-center justify-center gap-3 ${
+                activeTab === 'withdraw'
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-2xl'
+                  : 'text-slate-200 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Wallet className="h-5 w-5" />
+              Withdraw Stakes
+            </button>
+          </div>
+        </div>
+
+        {/* Transaction Status */}
+        {showTransactionStatus && (
+          <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-xl border border-blue-500/30 rounded-2xl">
+            <div className="p-6">
+              <LiveFeedback
+                state={isConfirming ? 'pending' : isConfirmed ? 'success' : undefined}
+                label={{
+                  pending: 'Transaction processing...',
+                  success: 'Transaction confirmed!',
+                  failed: 'Transaction failed'
+                }}
               >
-                <span className="flex items-center justify-center gap-2">
-                  💰 Stake Tokens
-                </span>
-                {activeTab === 'stake' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-400"></div>
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab('withdraw')}
-                className={`flex-1 px-6 py-4 text-center font-semibold transition-all duration-300 relative ${activeTab === 'withdraw'
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'text-neutral-400 hover:text-blue-400 hover:bg-neutral-700'
-                  }`}
-              >
-                <span className="flex items-center justify-center gap-2">
-                  🏦 Withdraw Stakes
-                </span>
-                {activeTab === 'withdraw' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-400"></div>
-                )}
-              </button>
+                <div className="flex items-center gap-4">
+                  <CircularIcon size="md" className="bg-blue-500">
+                    {isConfirming ? <Clock className="h-5 w-5 text-white animate-spin" /> : <ShieldCheck className="h-5 w-5 text-white" />}
+                  </CircularIcon>
+                  <div>
+                    <p className="font-semibold text-white">
+                      {isConfirming ? 'Processing Transaction' : 'Transaction Successful'}
+                    </p>
+                    <p className="text-sm text-slate-300">
+                      {isConfirming ? 'Please wait while we confirm your transaction' : 'Your transaction has been completed successfully'}
+                    </p>
+                  </div>
+                </div>
+              </LiveFeedback>
             </div>
           </div>
+        )}
 
-          <div className="p-2">
-            {/* Transaction Status */}
-            {showTransactionStatus && (
-              <div className="mb-6 p-4 bg-blue-900/30 border border-blue-700 rounded-xl">
-                <div className="flex items-center gap-3">
-                  {isConfirming && (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-400 border-t-transparent"></div>
-                      <div>
-                        <p className="font-medium text-blue-400">Transaction Confirming...</p>
-                        <p className="text-sm text-blue-300">Please wait while we process your transaction</p>
-                      </div>
-                    </>
-                  )}
-                  {isConfirmed && (
-                    <>
-                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-xs">✓</span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-green-400">Transaction Confirmed!</p>
-                        <p className="text-sm text-green-300">Your transaction was successful</p>
-                      </div>
-                    </>
-                  )}
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-900/20 backdrop-blur-xl border border-red-500/30 rounded-2xl">
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <CircularIcon size="md" className="bg-red-500 flex-shrink-0">
+                  <Flash className="h-5 w-5 text-white" />
+                </CircularIcon>
+                <div className="flex-1">
+                  <p className="font-semibold text-red-400 mb-1">Error Occurred</p>
+                  <p className="text-sm text-red-300">{error}</p>
                 </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setError(null)}
+                  className="bg-red-500/20 hover:bg-red-500/30 border-red-500/50"
+                >
+                  Dismiss
+                </Button>
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-            {/* Error Message */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-900/30 border border-red-700 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <span className="text-red-400 text-xl">⚠️</span>
-                  <div className="flex-1">
-                    <p className="font-medium text-red-400">Error</p>
-                    <p className="text-sm text-red-300">{error}</p>
-                  </div>
-                  <button
-                    onClick={() => setError(null)}
-                    className="text-red-400 hover:text-red-300 transition-colors p-1 hover:bg-red-900/50 rounded-full"
-                  >
-                    <span className="text-xl">×</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'stake' && (
-              <div className="space-y-6">
+        {/* Main Content */}
+        {activeTab === 'stake' && (
+          <div className="space-y-6">
+            {/* Balance Card */}
+            <div className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur-xl border border-blue-500/30 rounded-2xl">
+              <div className="p-8">
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-white mb-2">Stake Your Tokens</h2>
-                  <p className="text-neutral-400">Start earning rewards with automated trading</p>
+                  <div className="flex items-center justify-center mb-4">
+                    <CircularIcon size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600">
+                      <Coins className="h-8 w-8 text-white" />
+                    </CircularIcon>
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">Your Balance</h3>
+                  <p className="text-4xl font-bold text-transparent bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text mb-4">
+                    {formattedBalance} WLD
+                  </p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-500/20 text-blue-300 border border-blue-500/50">
+                        <ShieldCheck className="h-3 w-3 mr-1" />
+                        Permit2 Ready
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-200">
+                      Allowance: {formatBigInt(permit2Allowance)} WLD
+                    </p>
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                {/* Balance Card */}
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white shadow-lg">
-                  <h3 className="text-lg font-semibold mb-2">Your Balance</h3>
-                  <p className="text-3xl font-bold">{formattedBalance} WLD</p>
-                </div>
+            {/* Staking Form */}
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
+              <div className="p-8">
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-white mb-2">Stake Your Tokens</h2>
+                    <p className="text-slate-200">Enter the amount you want to stake and earn rewards</p>
+                  </div>
 
-                {/* Staking Form */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-neutral-300 mb-2">
-                      Amount to Stake
-                    </label>
+                  <div className="space-y-4">
                     <div className="relative">
                       <input
                         type="text"
@@ -661,138 +713,222 @@ export function StakingFormMain() {
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="Enter amount (e.g., 10.5)"
                         disabled={isConfirming}
-                        className="w-full p-4 pr-16 text-lg bg-neutral-700 border-2 border-neutral-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-neutral-800 disabled:cursor-not-allowed transition-all shadow-sm text-white placeholder-neutral-500"
+                        className="w-full text-lg py-4 px-4 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:border-blue-500 focus:bg-white/15 focus:outline-none transition-all"
                       />
-                      <button
+                      <Button
                         onClick={handleMaxAmount}
                         disabled={balance === BigInt(0) || isConfirming}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-blue-900/50 text-blue-400 text-sm font-semibold rounded-lg hover:bg-blue-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border border-blue-700 hover:border-blue-600"
+                        size="sm"
+                        variant="secondary"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-500/20 hover:bg-blue-500/30 border-blue-500/50 text-blue-300"
                       >
                         MAX
-                      </button>
+                      </Button>
                     </div>
+                    
                     {isValidAmount && !hasEnoughBalance && (
-                      <p className="mt-2 text-sm text-red-400">Insufficient balance</p>
+                      <p className="text-sm text-red-400 flex items-center gap-2">
+                        <Flash className="h-4 w-4" />
+                        Insufficient balance
+                      </p>
                     )}
                   </div>
 
-                  {/* Stake Button */}
-                  <button
-                    onClick={handleStakeWithPermit2}
-                    disabled={!isValidAmount || !hasEnoughBalance || isStaking || !walletAddress || isConfirming}
-                    className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 border-2 ${isStaking || !isValidAmount || !hasEnoughBalance || isConfirming
-                      ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed border-neutral-600'
-                      : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02] shadow-lg hover:shadow-xl border-blue-600 hover:border-blue-700'
-                      }`}
+                  <LiveFeedback
+                    state={isStaking ? 'pending' : undefined}
+                    label={{
+                      pending: 'Processing stake...',
+                      success: 'Staking successful!',
+                      failed: 'Staking failed'
+                    }}
                   >
-                    {isStaking ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                        Staking...
-                      </span>
-                    ) : (
-                      '🚀 Stake with Permit2'
-                    )}
-                  </button>
-                </div>
-
-                {/* Info Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-neutral-700 border-2 border-neutral-600 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-                    <h4 className="font-semibold text-blue-400 mb-2">📊 Trading Strategy</h4>
-                    <ul className="text-sm text-neutral-300 space-y-1">
-                      <li>• 2% of staked amount used for trading</li>
-                      <li>• Automated profit generation</li>
-                      <li>• Real-time value tracking</li>
-                    </ul>
-                  </div>
-                  <div className="bg-neutral-700 border-2 border-neutral-600 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-                    <h4 className="font-semibold text-green-400 mb-2">🎁 Rewards</h4>
-                    <ul className="text-sm text-neutral-300 space-y-1">
-                      <li>• Claim rewards on Sundays</li>
-                      <li>• 10-minute lock period (testing)</li>
-                      <li>• Profit-based reward system</li>
-                    </ul>
-                  </div>
+                    <Button
+                      onClick={handleStakeWithPermit2}
+                      disabled={!isValidAmount || !hasEnoughBalance || isStaking || !walletAddress || isConfirming}
+                      size="lg"
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 text-lg shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-[1.02]"
+                    >
+                      {isStaking ? (
+                        <div className="flex items-center gap-3">
+                          <Clock className="h-5 w-5 animate-spin" />
+                          Staking...
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <ArrowUp className="h-5 w-5" />
+                          Stake with Permit2
+                        </div>
+                      )}
+                    </Button>
+                  </LiveFeedback>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* Withdraw Tab Content */}
-            {activeTab === 'withdraw' && (
-              <div className="space-y-6">
+            {/* Info Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-gradient-to-br from-green-900/20 to-emerald-900/20 backdrop-blur-xl border border-green-500/30 rounded-2xl">
+                <div className="p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <CircularIcon size="md" className="bg-green-500">
+                      <BarChart className="h-5 w-5 text-white" />
+                    </CircularIcon>
+                    <h4 className="font-semibold text-green-400 text-lg">Trading Strategy</h4>
+                  </div>
+                  <ul className="space-y-3 text-slate-300">
+                    <li className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      2% of staked amount used for trading
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      Automated profit generation
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      Real-time value tracking
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-xl border border-purple-500/30 rounded-2xl">
+                <div className="p-6">
+                  <div className="flex items-center gap-4 mb-4">
+                    <CircularIcon size="md" className="bg-purple-500">
+                      <Gift className="h-5 w-5 text-white" />
+                    </CircularIcon>
+                    <h4 className="font-semibold text-purple-400 text-lg">Rewards System</h4>
+                  </div>
+                  <ul className="space-y-3 text-slate-300">
+                    <li className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                      Claim rewards on Sundays
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                      7-day lock period
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                      Profit-based reward system
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Withdraw Tab Content */}
+        {activeTab === 'withdraw' && (
+          <div className="space-y-6">
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
+              <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-2xl font-bold text-white">Your Stakes</h2>
-                    <p className="text-neutral-400">Manage and withdraw your staked tokens</p>
+                    <h2 className="text-2xl font-bold text-white mb-2">Your Stakes</h2>
+                    <p className="text-slate-200">Manage and withdraw your staked positions</p>
                   </div>
-                  <button
-                    onClick={fetchUserStakes}
-                    disabled={isLoadingStakes}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 border-2 border-blue-600 hover:border-blue-700 shadow-md hover:shadow-lg"
+                  <LiveFeedback
+                    state={isLoadingStakes ? 'pending' : undefined}
+                    label={{
+                      pending: 'Refreshing stakes...',
+                      success: 'Stakes updated',
+                      failed: 'Failed to refresh'
+                    }}
                   >
-                    {isLoadingStakes ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                        Refreshing...
-                      </>
-                    ) : (
-                      <>
-                        🔄 Refresh
-                      </>
-                    )}
-                  </button>
+                    <Button
+                      onClick={fetchUserStakes}
+                      disabled={isLoadingStakes}
+                      variant="secondary"
+                      className="bg-blue-500/20 hover:bg-blue-500/30 border-blue-500/50 text-blue-300"
+                    >
+                      <Refresh className={`h-4 w-4 mr-2 ${isLoadingStakes ? 'animate-spin' : ''}`} />
+                      Refresh
+                    </Button>
+                  </LiveFeedback>
                 </div>
+              </div>
+            </div>
 
-                {stakes.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-neutral-400">No stakes found. Start staking to see your positions here.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {stakes.map((stake, index) => (
-                      <div key={index} className="bg-neutral-700 border-2 border-neutral-600 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
-                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-4">
-                              <h3 className="text-lg font-semibold text-white">
-                                Stake #{stake.index}
-                              </h3>
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${stake.active
-                                ? 'bg-green-900/50 text-green-400 border-green-700'
-                                : 'bg-neutral-600 text-neutral-400 border-neutral-500'
-                                }`}>
-                                {stake.active ? '🟢 Active' : '⚫ Inactive'}
-                              </span>
-                              {stake.tradeActive && (
-                                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-900/50 text-yellow-400 border border-yellow-700">
-                                  📈 Trading
+            {stakes.length === 0 ? (
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl">
+                <div className="p-12 text-center">
+                  <CircularIcon size="lg" className="bg-slate-500/20 mx-auto mb-4">
+                    <Eye className="h-8 w-8 text-slate-200" />
+                  </CircularIcon>
+                  <p className="text-slate-200 text-lg">No stakes found</p>
+                  <p className="text-slate-300 text-sm mt-2">Start staking to see your positions here</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {stakes.map((stake, index) => (
+                  <div key={index} className="bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/10 transition-all duration-300 rounded-2xl">
+                    <div className="p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-4 mb-6">
+                            <CircularIcon size="md" className="bg-blue-500">
+                              <Dollar className="h-5 w-5 text-white" />
+                            </CircularIcon>
+                            <div>
+                              <h3 className="text-xl font-semibold text-white">Stake #{stake.index}</h3>
+                              <div className="flex items-center gap-3 mt-1">
+                                <span 
+                                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${stake.active 
+                                    ? "bg-green-500/20 text-green-300 border border-green-500/50" 
+                                    : "bg-slate-500/20 text-slate-200 border border-slate-500/50"
+                                  }`}
+                                >
+                                  {stake.active ? '🟢 Active' : '⚫ Inactive'}
                                 </span>
-                              )}
+                                {stake.tradeActive && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/20 text-yellow-300 border border-yellow-500/50">
+                                    📈 Trading
+                                  </span>
+                                )}
+                              </div>
                             </div>
+                          </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                              <div className="bg-neutral-800 rounded-lg p-3 border border-neutral-700">
-                                <p className="text-xs text-blue-400 font-medium mb-1">Staked Amount</p>
-                                <p className="font-mono font-semibold text-white">{formatBigInt(stake.amount)} WLD</p>
-                              </div>
-                              <div className="bg-neutral-800 rounded-lg p-3 border border-neutral-700">
-                                <p className="text-xs text-purple-400 font-medium mb-1">Trading Amount</p>
-                                <p className="font-mono font-semibold text-white">{formatBigInt(stake.tradingAmount)} WLD</p>
-                              </div>
-                              <div className="bg-neutral-800 rounded-lg p-3 border border-neutral-700">
-                                <p className="text-xs text-green-400 font-medium mb-1">Current Value</p>
-                                <p className="font-mono font-semibold text-white">{formatBigInt(stake.currentTradeValue)} WLD</p>
-                              </div>
-                              <div className="bg-neutral-800 rounded-lg p-3 border border-neutral-700">
-                                <p className="text-xs text-yellow-400 font-medium mb-1">Rewards</p>
-                                <p className="font-mono font-semibold text-white">{formatBigInt(stake.claimableRewards)} RWD</p>
-                              </div>
-                              <div className="bg-neutral-800 rounded-lg p-3 border border-neutral-700">
-                                <p className="text-xs text-neutral-400 font-medium mb-1">Staked On</p>
-                                <p className="text-xs text-neutral-300">{formatTimestamp(stake.timestamp)}</p>
-                              </div>
-                              
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                              <p className="text-xs text-blue-400 font-medium mb-2 flex items-center gap-1">
+                                <Coins className="h-3 w-3" />
+                                Staked Amount
+                              </p>
+                              <p className="font-bold text-white text-lg">{formatBigInt(stake.amount)} WLD</p>
+                            </div>
+                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                              <p className="text-xs text-purple-400 font-medium mb-2 flex items-center gap-1">
+                                <TrendingUp className="h-3 w-3" />
+                                Trading
+                              </p>
+                              <p className="font-bold text-white text-lg">{formatBigInt(stake.tradingAmount)} WLD</p>
+                            </div>
+                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                              <p className="text-xs text-green-400 font-medium mb-2 flex items-center gap-1">
+                                <BarChart className="h-3 w-3" />
+                                Current Value
+                              </p>
+                              <p className="font-bold text-white text-lg">{formatBigInt(stake.currentTradeValue)} WLD</p>
+                            </div>
+                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                              <p className="text-xs text-yellow-400 font-medium mb-2 flex items-center gap-1">
+                                <Gift className="h-3 w-3" />
+                                Rewards
+                              </p>
+                              <p className="font-bold text-white text-lg">{formatBigInt(stake.claimableRewards)} RWD</p>
+                            </div>
+                            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                              <p className="text-xs text-slate-200 font-medium mb-2 flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                Staked On
+                              </p>
+                              <p className="text-sm text-slate-300 font-mono">{formatTimestamp(stake.timestamp)}</p>
+                            </div>
                             <div className="bg-white/5 rounded-xl p-4 border border-white/10">
                               <p className="text-xs text-orange-400 font-medium mb-2 flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
@@ -805,19 +941,24 @@ export function StakingFormMain() {
                                   <span className="text-orange-300">{getTimeUntilUnlock(stake.timestamp)}</span>
                                 )}
                               </p>
-                              <p className="text-xs text-slate-200 mt-1">
+                              <p className="text-xs text-slate-300 mt-1">
                                 Until: {getLockEndDate(stake.timestamp)}
                               </p>
                             </div>
-                            </div>
                           </div>
+                        </div>
 
-                          <div className="flex flex-col items-end gap-3">
+                        <div className="flex flex-col items-end gap-3">
                           {stake.active && (
                             <div className="flex flex-col gap-3">
                               {/* Claim Rewards Button */}
                               <LiveFeedback
                                 state={isClaimingRewards[stake.index] ? 'pending' : undefined}
+                                label={{
+                                  pending: 'Processing claim...',
+                                  success: 'Claim successful!',
+                                  failed: 'Claim failed'
+                                }}
                               >
                                 <Button
                                   onClick={() => handleClaimRewards(stake.index)}
@@ -830,8 +971,8 @@ export function StakingFormMain() {
                                   variant="secondary"
                                   className={`${
                                     getTimeUntilUnlock(stake.timestamp) !== 'Unlocked' || stake.claimableRewards === BigInt(0)
-                                      ? 'bg-green-300/80 text-white border-slate-500/50 cursor-not-allowed'
-                                      : 'bg-yellow-300/90 hover:bg-yellow-500/30 border-yellow-500/50 text-yellow-300 hover:text-yellow-200'
+                                      ? 'bg-slate-500/20 text-slate-200 border-slate-500/50 cursor-not-allowed'
+                                      : 'bg-yellow-500/20 hover:bg-yellow-500/30 border-yellow-500/50 text-yellow-300 hover:text-yellow-200'
                                   }`}
                                 >
                                   {isClaimingRewards[stake.index] ? (
@@ -851,6 +992,11 @@ export function StakingFormMain() {
                               {/* Withdraw Button */}
                               <LiveFeedback
                                 state={isWithdrawing[stake.index] ? 'pending' : undefined}
+                                label={{
+                                  pending: 'Processing withdrawal...',
+                                  success: 'Withdrawal successful!',
+                                  failed: 'Withdrawal failed'
+                                }}
                               >
                                 <Button
                                   onClick={() => handleUnstake(stake.index)}
@@ -886,20 +1032,19 @@ export function StakingFormMain() {
                           )}
 
                           {!stake.active && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-400 text-white border border-slate-500/50">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-500/20 text-slate-200 border border-slate-500/50">
                               ✅ Already withdrawn
                             </span>
                           )}
                         </div>
-                        </div>
                       </div>
-                    ))}
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

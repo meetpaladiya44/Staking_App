@@ -229,7 +229,7 @@ export const Influencers = () => {
                   </span>
                 )}
               </Button>
-              {subscriptionMessages[influencer.id] && (
+              {/* {subscriptionMessages[influencer.id] && (
                 <div
                   className={`mt-2 p-3 rounded-lg text-sm font-medium font-['Inter'] transition-all duration-300 w-full text-center ${subscriptionMessages[influencer.id].includes('Successfully')
                     ? 'bg-green-500/20 text-green-400 border border-green-500/30'
@@ -238,7 +238,7 @@ export const Influencers = () => {
                 >
                   {subscriptionMessages[influencer.id]}
                 </div>
-              )}
+              )} */}
             </div>
           ))}
           {influencers.length === 0 && (

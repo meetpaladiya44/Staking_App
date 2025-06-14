@@ -27,9 +27,9 @@ export default async function Home() {
         <div className="w-full max-w-none space-y-8 pb-20 px-4">
 
           {/* Admin Section */}
-          <section className="w-full">
+          {/* <section className="w-full">
             <AdminPage />
-          </section>
+          </section> */}
 
           {/* Staking Section */}
           <section className="w-full">

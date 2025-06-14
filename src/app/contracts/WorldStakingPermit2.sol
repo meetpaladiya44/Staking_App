@@ -57,7 +57,7 @@ interface ISignatureTransfer {
 // Reward Token Contract using Solmate
 contract RewardToken is ERC20, Owned {
     constructor() ERC20("RewardToken", "RWD", 18) Owned(msg.sender) {
-        _mint(msg.sender, 1_000_000 * 10**18); // Mint 1M tokens to owner
+        _mint(msg.sender, 1_000_000 * 10 ** 18); // Mint 1M tokens to owner
     }
 
     function mint(address to, uint256 amount) external onlyOwner {
@@ -87,26 +87,56 @@ contract WorldStaking is Owned {
 
     mapping(address => Stake[]) public stakes; // User stakes as an array
 
-    event Staked(address indexed user, uint256 amount, uint256 tradingAmount, uint256 timestamp);
-    event Unstaked(address indexed user, uint256 amount, uint256 rewards, uint256 timestamp);
-    event RewardsClaimed(address indexed user, uint256 amount, uint256 timestamp);
-    event TradeUpdated(address indexed user, uint256 stakeIndex, uint256 newTradeValue);
-    event TradeExited(address indexed user, uint256 stakeIndex, uint256 finalValue, uint256 rewards);
+    event Staked(
+        address indexed user,
+        uint256 amount,
+        uint256 tradingAmount,
+        uint256 timestamp
+    );
+    event Unstaked(
+        address indexed user,
+        uint256 amount,
+        uint256 rewards,
+        uint256 timestamp
+    );
+    event RewardsClaimed(
+        address indexed user,
+        uint256 amount,
+        uint256 timestamp
+    );
+    event TradeUpdated(
+        address indexed user,
+        uint256 stakeIndex,
+        uint256 newTradeValue
+    );
+    event TradeExited(
+        address indexed user,
+        uint256 stakeIndex,
+        uint256 finalValue,
+        uint256 rewards
+    );
 
     constructor(address _stakingToken, address _rewardToken) Owned(msg.sender) {
         stakingToken = ERC20(_stakingToken);
         rewardToken = RewardToken(_rewardToken);
         // Universal Permit2 contract address deployed on all EVM chains
-        permit2 = ISignatureTransfer(0x000000000022D473030F116dDEE9F6B43aC78BA3);
+        permit2 = ISignatureTransfer(
+            0x000000000022D473030F116dDEE9F6B43aC78BA3
+        );
     }
 
     // Check balance of staking tokens for a user
-    function getStakingTokenBalance(address user) external view returns (uint256) {
+    function getStakingTokenBalance(
+        address user
+    ) external view returns (uint256) {
         return stakingToken.balanceOf(user);
     }
 
     // Check nonce bitmap for a user (for Permit2)
-    function getNonceBitmap(address user, uint256 wordPos) external view returns (uint256) {
+    function getNonceBitmap(
+        address user,
+        uint256 wordPos
+    ) external view returns (uint256) {
         return permit2.nonceBitmap(user, wordPos);
     }
 
@@ -123,19 +153,29 @@ contract WorldStaking is Owned {
         bytes calldata signature
     ) external {
         require(amount > 0, "Amount must be greater than 0");
-        require(stakingToken.balanceOf(msg.sender) >= amount, "Insufficient balance");
-        
+        require(
+            stakingToken.balanceOf(msg.sender) >= amount,
+            "Insufficient balance"
+        );
+
         // Verify permit data matches the amount
-        require(permitData.permitted.token == address(stakingToken), "Invalid token in permit");
-        require(permitData.permitted.amount >= amount, "Insufficient permit amount");
+        require(
+            permitData.permitted.token == address(stakingToken),
+            "Invalid token in permit"
+        );
+        require(
+            permitData.permitted.amount >= amount,
+            "Insufficient permit amount"
+        );
         require(block.timestamp <= permitData.deadline, "Permit expired");
 
         // Create transfer details
-        ISignatureTransfer.SignatureTransferDetails memory transferDetails = 
-            ISignatureTransfer.SignatureTransferDetails({
-                to: address(this),
-                requestedAmount: amount
-            });
+        ISignatureTransfer.SignatureTransferDetails
+            memory transferDetails = ISignatureTransfer
+                .SignatureTransferDetails({
+                    to: address(this),
+                    requestedAmount: amount
+                });
 
         // Execute the signature-based transfer through Permit2
         permit2.permitTransferFrom(
@@ -147,15 +187,17 @@ contract WorldStaking is Owned {
 
         uint256 tradingAmount = (amount * TRADING_PERCENTAGE) / 100;
 
-        stakes[msg.sender].push(Stake({
-            amount: amount,
-            timestamp: block.timestamp,
-            tradingAmount: tradingAmount,
-            currentTradeValue: tradingAmount,
-            tradeActive: true,
-            claimableRewards: 0,
-            active: true
-        }));
+        stakes[msg.sender].push(
+            Stake({
+                amount: amount,
+                timestamp: block.timestamp,
+                tradingAmount: tradingAmount,
+                currentTradeValue: tradingAmount,
+                tradeActive: true,
+                claimableRewards: 0,
+                active: true
+            })
+        );
 
         emit Staked(msg.sender, amount, tradingAmount, block.timestamp);
     }
@@ -167,28 +209,43 @@ contract WorldStaking is Owned {
      */
     function stake(uint256 amount) external {
         require(amount > 0, "Amount must be greater than 0");
-        require(stakingToken.balanceOf(msg.sender) >= amount, "Insufficient balance");
-        require(stakingToken.allowance(msg.sender, address(this)) >= amount, "Insufficient allowance");
+        require(
+            stakingToken.balanceOf(msg.sender) >= amount,
+            "Insufficient balance"
+        );
+        require(
+            stakingToken.allowance(msg.sender, address(this)) >= amount,
+            "Insufficient allowance"
+        );
 
-        require(stakingToken.transferFrom(msg.sender, address(this), amount), "Transfer failed");
+        require(
+            stakingToken.transferFrom(msg.sender, address(this), amount),
+            "Transfer failed"
+        );
 
         uint256 tradingAmount = (amount * TRADING_PERCENTAGE) / 100;
 
-        stakes[msg.sender].push(Stake({ 
-            amount: amount,
-            timestamp: block.timestamp,
-            tradingAmount: tradingAmount,
-            currentTradeValue: tradingAmount,
-            tradeActive: true,
-            claimableRewards: 0,
-            active: true
-        }));
+        stakes[msg.sender].push(
+            Stake({
+                amount: amount,
+                timestamp: block.timestamp,
+                tradingAmount: tradingAmount,
+                currentTradeValue: tradingAmount,
+                tradeActive: true,
+                claimableRewards: 0,
+                active: true
+            })
+        );
 
         emit Staked(msg.sender, amount, tradingAmount, block.timestamp);
     }
 
     // Update trade value (called by backend when trade price changes)
-    function updateTradeValue(address user, uint256 stakeIndex, uint256 newTradeValue) external onlyOwner {
+    function updateTradeValue(
+        address user,
+        uint256 stakeIndex,
+        uint256 newTradeValue
+    ) external onlyOwner {
         require(stakeIndex < stakes[user].length, "Invalid stake index");
         Stake storage userStake = stakes[user][stakeIndex];
         require(userStake.active, "Stake not active");
@@ -199,7 +256,11 @@ contract WorldStaking is Owned {
     }
 
     // Exit trade (called by backend when max exit time is reached or user unstakes)
-    function exitTrade(address user, uint256 stakeIndex, uint256 finalTradeValue) external onlyOwner {
+    function exitTrade(
+        address user,
+        uint256 stakeIndex,
+        uint256 finalTradeValue
+    ) external onlyOwner {
         require(stakeIndex < stakes[user].length, "Invalid stake index");
         Stake storage userStake = stakes[user][stakeIndex];
         require(userStake.active, "Stake not active");
@@ -210,10 +271,17 @@ contract WorldStaking is Owned {
 
         // Calculate rewards: if trade is profitable, reward = profit amount
         if (finalTradeValue > userStake.tradingAmount) {
-            userStake.claimableRewards = finalTradeValue - userStake.tradingAmount;
+            userStake.claimableRewards =
+                finalTradeValue -
+                userStake.tradingAmount;
         }
 
-        emit TradeExited(user, stakeIndex, finalTradeValue, userStake.claimableRewards);
+        emit TradeExited(
+            user,
+            stakeIndex,
+            finalTradeValue,
+            userStake.claimableRewards
+        );
     }
 
     // Unstake tokens by index
@@ -221,13 +289,19 @@ contract WorldStaking is Owned {
         require(index < stakes[msg.sender].length, "Invalid stake index");
         Stake storage userStake = stakes[msg.sender][index];
         require(userStake.active, "No active stake");
-        require(block.timestamp >= userStake.timestamp + LOCKIN_PERIOD, "Lock-in period not over");
+        require(
+            block.timestamp >= userStake.timestamp + LOCKIN_PERIOD,
+            "Lock-in period not over"
+        );
 
         uint256 amount = userStake.amount;
         uint256 rewards = userStake.claimableRewards;
 
         // If trade is still active, it needs to be exited by backend first
-        require(!userStake.tradeActive, "Trade must be exited first. Contact backend to exit trade.");
+        require(
+            !userStake.tradeActive,
+            "Trade must be exited first. Contact backend to exit trade."
+        );
 
         // Preserve the original timestamp and claimable rewards for claiming on Sunday
         // Only reset amount and set active to false
@@ -240,46 +314,43 @@ contract WorldStaking is Owned {
         emit Unstaked(msg.sender, amount, rewards, block.timestamp);
     }
 
-    // Claim rewards (only on Sundays)
-    function claimRewards() external {
-        uint256 totalRewards = 0;
-        bool hasClaimableRewards = false;
-        uint256 earliestTimestamp = type(uint256).max;
+    // Helper function to get the current day of the week (0 = Sunday)
+    function getDayOfWeek() external view returns (uint256) {
+        return (block.timestamp / SECONDS_IN_DAY) % 7;
+    }
 
-        // Calculate total claimable rewards and find earliest stake (including inactive stakes with rewards)
-        for (uint256 i = 0; i < stakes[msg.sender].length; i++) {
-            if (stakes[msg.sender][i].claimableRewards > 0) {
-                hasClaimableRewards = true;
-                totalRewards += stakes[msg.sender][i].claimableRewards;
-                if (stakes[msg.sender][i].timestamp < earliestTimestamp) {
-                    earliestTimestamp = stakes[msg.sender][i].timestamp;
-                }
-            }
-        }
+    // Helper function to check if a user can unstake a specific stake
+    function canUnstake(
+        address user,
+        uint256 index
+    ) external view returns (bool) {
+        if (index >= stakes[user].length) return false;
+        Stake storage userStake = stakes[user][index];
+        return
+            userStake.active &&
+            block.timestamp >= userStake.timestamp + LOCKIN_PERIOD &&
+            !userStake.tradeActive; // Trade must be exited first
+    }
 
-        require(hasClaimableRewards, "No rewards to claim");
-        require(block.timestamp >= earliestTimestamp + LOCKIN_PERIOD, "Lock-in period not over");
+    // Simplified claim rewards function
+    function claimRewards(uint256 index) external {
+        require(index < stakes[msg.sender].length, "Invalid stake index");
+        Stake storage userStake = stakes[msg.sender][index];
 
-        // Check if today is Sunday (0 = Sunday in our calculation)
-        uint256 dayOfWeek = (block.timestamp / SECONDS_IN_DAY) % 7;
-        require(dayOfWeek == 0, "Can only claim rewards on Sundays");
+        require(
+            userStake.claimableRewards > 0,
+            "No rewards to claim for this stake"
+        );
+        require(
+            block.timestamp >= userStake.timestamp + LOCKIN_PERIOD,
+            "Lock-in period not over"
+        );
 
-        // Ensure it's the Sunday after the lock-in period
-        uint256 lockinEnd = earliestTimestamp + LOCKIN_PERIOD;
-        uint256 daysUntilSunday = (7 - ((lockinEnd / SECONDS_IN_DAY) % 7)) % 7;
-        if (daysUntilSunday == 0) daysUntilSunday = 7; // If lock-in ends on Sunday, wait for next Sunday
-        uint256 firstClaimableSunday = lockinEnd + (daysUntilSunday * SECONDS_IN_DAY);
-        require(block.timestamp >= firstClaimableSunday, "Cannot claim before the first Sunday after lock-in");
+        uint256 rewards = userStake.claimableRewards;
+        userStake.claimableRewards = 0; // Reset claimable rewards for this stake
 
-        // Reset claimable rewards for all stakes that have rewards
-        for (uint256 i = 0; i < stakes[msg.sender].length; i++) {
-            if (stakes[msg.sender][i].claimableRewards > 0) {
-                stakes[msg.sender][i].claimableRewards = 0;
-            }
-        }
-
-        rewardToken.mint(msg.sender, totalRewards);
-        emit RewardsClaimed(msg.sender, totalRewards, block.timestamp);
+        rewardToken.mint(msg.sender, rewards);
+        emit RewardsClaimed(msg.sender, rewards, block.timestamp);
     }
 
     // Helper function to get the current day of the week (0 = Sunday)
@@ -288,51 +359,48 @@ contract WorldStaking is Owned {
     }
 
     // Helper function to check if a user can unstake a specific stake
-    function canUnstake(address user, uint256 index) external view returns (bool) {
+    function canUnstake(
+        address user,
+        uint256 index
+    ) external view returns (bool) {
         if (index >= stakes[user].length) return false;
         Stake storage userStake = stakes[user][index];
-        return userStake.active && 
-               block.timestamp >= userStake.timestamp + LOCKIN_PERIOD &&
-               !userStake.tradeActive; // Trade must be exited first
+        return
+            userStake.active &&
+            block.timestamp >= userStake.timestamp + LOCKIN_PERIOD &&
+            !userStake.tradeActive; // Trade must be exited first
     }
 
-    // Helper function to check if a user can claim rewards
+    // Updated helper function to check if a user can claim rewards (simplified)
     function canClaimRewards(address user) external view returns (bool) {
-        bool hasClaimableRewards = false;
-        uint256 earliestTimestamp = type(uint256).max;
-
         for (uint256 i = 0; i < stakes[user].length; i++) {
-            if (stakes[user][i].claimableRewards > 0) {
-                hasClaimableRewards = true;
-                if (stakes[user][i].timestamp < earliestTimestamp) {
-                    earliestTimestamp = stakes[user][i].timestamp;
-                }
+            if (
+                stakes[user][i].claimableRewards > 0 &&
+                block.timestamp >= stakes[user][i].timestamp + LOCKIN_PERIOD
+            ) {
+                return true;
             }
         }
-
-        if (!hasClaimableRewards) return false;
-        if (block.timestamp < earliestTimestamp + LOCKIN_PERIOD) return false;
-
-        uint256 dayOfWeek = (block.timestamp / SECONDS_IN_DAY) % 7;
-        if (dayOfWeek != 0) return false;
-
-        uint256 lockinEnd = earliestTimestamp + LOCKIN_PERIOD;
-        uint256 daysUntilSunday = (7 - ((lockinEnd / SECONDS_IN_DAY) % 7)) % 7;
-        if (daysUntilSunday == 0) daysUntilSunday = 7;
-        uint256 firstClaimableSunday = lockinEnd + (daysUntilSunday * SECONDS_IN_DAY);
-        return block.timestamp >= firstClaimableSunday;
+        return false;
     }
 
     // Get stake details for a user
-    function getStakeDetails(address user, uint256 index) external view returns (
-        uint256 amount,
-        uint256 timestamp,
-        uint256 tradingAmount,
-        uint256 currentTradeValue,
-        bool tradeActive,
-        uint256 claimableRewards,
-        bool active
-    ) {
+    function getStakeDetails(
+        address user,
+        uint256 index
+    )
+        external
+        view
+        returns (
+            uint256 amount,
+            uint256 timestamp,
+            uint256 tradingAmount,
+            uint256 currentTradeValue,
+            bool tradeActive,
+            uint256 claimableRewards,
+            bool active
+        )
+    {
         require(index < stakes[user].length, "Invalid stake index");
         Stake storage userStake = stakes[user][index];
         return (
@@ -347,7 +415,9 @@ contract WorldStaking is Owned {
     }
 
     // Get total claimable rewards for a user
-    function getTotalClaimableRewards(address user) external view returns (uint256) {
+    function getTotalClaimableRewards(
+        address user
+    ) external view returns (uint256) {
         uint256 totalRewards = 0;
         for (uint256 i = 0; i < stakes[user].length; i++) {
             totalRewards += stakes[user][i].claimableRewards;
